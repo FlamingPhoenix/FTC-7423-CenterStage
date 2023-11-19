@@ -2,15 +2,22 @@ package org.firstinspires.ftc.teamcode;
 
 import static java.lang.Math.abs;
 
+import com.qualcomm.hardware.bosch.BHI260IMU;
 import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
@@ -22,37 +29,44 @@ public class FieldCentric extends LinearOpMode {
 
     private static final boolean USE_WEBCAM = true;  // true for webcam, false for phone camera
 
-    DcMotor fl, fr, bl, br;
+    DcMotor fl, fr, bl, br, intake,liftl,liftr;
+    Servo arml,armr, claw;
     private AprilTagProcessor aprilTag;
     DistanceSensor dl,dr;
     private VisionPortal visionPortal;
     public double motorPowerMultiplier = 1;
     double maxDistance;
+    double servoPosition = 0;
     @Override
     public void runOpMode(){
         fl = hardwareMap.dcMotor.get("fl");
         bl = hardwareMap.dcMotor.get("bl");
         fr = hardwareMap.dcMotor.get("fr");
         br = hardwareMap.dcMotor.get("br");
+        intake = hardwareMap.dcMotor.get("intake");
 
+        claw = hardwareMap.servo.get("claw");
+        liftr = hardwareMap.dcMotor.get("liftr");
+        liftl = hardwareMap.dcMotor.get("liftl");
+        //arml = hardwareMap.servo.get("arml");
+        //armr = hardwareMap.servo.get("armr");
         fr.setDirection(DcMotorSimple.Direction.REVERSE);
         br.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        dl = hardwareMap.get(DistanceSensor.class,"dl");
-        dr = hardwareMap.get(DistanceSensor.class,"dr");
+        //dl = hardwareMap.get(DistanceSensor.class,"dl");
+        //dr = hardwareMap.get(DistanceSensor.class,"dr");
         double baseMaxDistance = 20;
 
 
         initAprilTag();
 
-        BNO055IMU imu = hardwareMap.get(BNO055IMU.class, "imu");
-        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-        parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
-        imu.initialize(parameters);
+        BHI260IMU imu = hardwareMap.get(BHI260IMU.class, "imu");
+        BHI260IMU.Parameters paramaters = new BHI260IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.LEFT, RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD));
+        imu.initialize(paramaters);
 
         waitForStart();
         while (opModeIsActive()){
-            maxDistance = baseMaxDistance * Math.pow(1-gamepad1.left_stick_y,2)/3;
+            /*maxDistance = baseMaxDistance * Math.pow(1-gamepad1.left_stick_y,2)/3;
             telemetry.addData("maxDistance",maxDistance);
             List<AprilTagDetection> currentDetections = aprilTag.getDetections();
             for (AprilTagDetection detection : currentDetections) {
@@ -82,15 +96,43 @@ public class FieldCentric extends LinearOpMode {
             }
             else{
                 motorPowerMultiplier = 1;
+            }*/
+            if(gamepad2.left_stick_y>0.1){
+                liftl.setPower(gamepad2.left_stick_y*0.5);
+                liftr.setPower(gamepad2.left_stick_y*0.5);
+            } else{
+                liftl.setPower(0);
+                liftr.setPower(0);
             }
-            telemetry.addData("distance",dr.getDistance(DistanceUnit.INCH));
-            telemetry.addData("motorPower",motorPowerMultiplier);
-            double y = -gamepad1.left_stick_y*motorPowerMultiplier; // Remember, this is reversed!
+            if (gamepad1.right_bumper) {
+                intake.setPower(0);
+            }else if(gamepad1.left_bumper){
+                intake.setPower(-0.2);
+            }else{
+                intake.setPower(0.35);
+            }
+            if(gamepad1.x){
+                imu.resetYaw();
+            }
+            if(gamepad1.y){
+                claw.setPosition(0.36);
+            }
+            if(gamepad1.b){
+                claw.setPosition(0.47);
+            }
+            /*if(gamepad2.right_stick_y>0.1){
+                if (gamepad2.right_stick_y > 0) {
+                    servoPosition = Math.max(0, Math.min(1, servoPosition)) + 0.01;
+                }else{
+                    servoPosition = Math.max(0, Math.min(1, servoPosition)) - 0.01;
+                }
+                claw.setPosition(servoPosition);
+            }*/
+            motorPowerMultiplier = 1;
+            double y = gamepad1.left_stick_y*motorPowerMultiplier; // Remember, this is reversed!
             double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
             double rx = gamepad1.right_stick_x;
-            telemetry.addData("x",x);
-            telemetry.addData("y",y);
-            double botHeading = -imu.getAngularOrientation().firstAngle;
+            double botHeading = -imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS).thirdAngle;
             double rotX = x * Math.cos(botHeading) - y * Math.sin(botHeading);
             double rotY = x * Math.sin(botHeading) + y * Math.cos(botHeading);
 
