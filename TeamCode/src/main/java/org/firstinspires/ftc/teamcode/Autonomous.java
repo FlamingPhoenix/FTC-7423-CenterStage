@@ -188,7 +188,7 @@ public class Autonomous extends LinearOpMode {
                     .build();
         }
     }
-    private void    setManualExposure(int exposureMS, int gain) {
+    private void setManualExposure(int exposureMS, int gain) {
         // Wait for the camera to be open, then use the controls
 
         if (visionPortal == null) {
