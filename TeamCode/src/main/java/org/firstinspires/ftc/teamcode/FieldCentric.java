@@ -105,19 +105,19 @@ public class FieldCentric extends LinearOpMode {
                 liftr.setPower(0);
             }
             if (gamepad1.right_bumper) {
-                intake.setPower(0);
+                intake.setPower(0.4);
             }else if(gamepad1.left_bumper){
-                intake.setPower(-0.2);
+                intake.setPower(-0.28);
             }else{
-                intake.setPower(0.35);
+                intake.setPower(0);
             }
             if(gamepad1.x){
                 imu.resetYaw();
             }
-            if(gamepad1.y){
+            if(gamepad2.a){
                 claw.setPosition(0.36);
             }
-            if(gamepad1.b){
+            if(gamepad2.b){
                 claw.setPosition(0.47);
             }
             /*if(gamepad2.right_stick_y>0.1){
@@ -132,7 +132,7 @@ public class FieldCentric extends LinearOpMode {
             double y = gamepad1.left_stick_y*motorPowerMultiplier; // Remember, this is reversed!
             double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
             double rx = gamepad1.right_stick_x;
-            double botHeading = -imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS).thirdAngle;
+            double botHeading = -imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
             double rotX = x * Math.cos(botHeading) - y * Math.sin(botHeading);
             double rotY = x * Math.sin(botHeading) + y * Math.cos(botHeading);
 
