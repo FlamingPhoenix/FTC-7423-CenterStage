@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import static java.lang.Math.max;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -10,6 +12,16 @@ public class liftAnd4barServotest extends LinearOpMode {
     //NO LIFT YET
     DcMotor liftl,liftr, intake;
     Servo claw, arml, armr;
+
+
+    float encoderDifference;
+    int liftposl, liftposr = 0;
+    double min = 0;
+    double max = 537;
+
+
+    double liftPower;
+    double liftrPower;
     @Override
     public void runOpMode(){
         liftl = hardwareMap.dcMotor.get("liftl");
@@ -21,10 +33,17 @@ public class liftAnd4barServotest extends LinearOpMode {
         //arml.setPosition(0.6);
         //armr.setPosition(0.4);
         claw.setPosition(1);
-        liftl.setDirection(DcMotor.Direction.REVERSE);
+        liftr.setDirection(DcMotor.Direction.REVERSE);
         liftl.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         liftr.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        liftr.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftl.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftr.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        liftl.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
         //liftr.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
         waitForStart();
         while(opModeIsActive()) {
             if (gamepad1.a) {
@@ -38,19 +57,36 @@ public class liftAnd4barServotest extends LinearOpMode {
             }else{
                 intake.setPower(0);
             }
-            if(gamepad1.right_stick_y>0.1){
-                liftl.setPower(gamepad1.right_stick_y/3);
-                liftr.setPower(gamepad1.right_stick_y/3);
 
-            }else if( gamepad1.right_stick_y<-0.1) {
-                liftl.setPower(gamepad1.right_stick_y/1);
-                liftr.setPower(gamepad1.right_stick_y/1);
+
+
+            liftposl = liftl.getCurrentPosition();
+            liftposr = liftr.getCurrentPosition();
+
+            if(gamepad1.right_stick_y>0.1){//up
+                liftPower = gamepad1.right_stick_y/1;
+            }else if(gamepad1.right_stick_y<-0.1) {//down
+                liftPower = gamepad1.right_stick_y/3;
             }else{
-                    liftl.setPower(-0.1);
-                    liftr.setPower(-0.1);
-
+                liftPower = 0.1;
             }
-            telemetry.addData("liftr",liftr.getCurrentPosition());
+
+            encoderDifference = (float) (liftposl-liftposr);
+            liftrPower = liftPower + encoderDifference / 500;
+            if(liftposl >= max){
+                liftPower = Math.min(liftPower, 0);
+                liftrPower = Math.min(liftrPower, 0);
+            }
+            if(liftposl <= min){
+                liftPower = Math.max(liftPower, 0);
+                liftrPower = Math.max(liftrPower, 0);
+            }
+
+            liftl.setPower(liftPower);
+            liftr.setPower(liftrPower);
+
+            telemetry.addData("lift",String.format("l: %d; r: %d", liftl.getCurrentPosition(), liftr.getCurrentPosition()));
+            telemetry.addData("encoder difference", encoderDifference);
             telemetry.update();
         }
     }
