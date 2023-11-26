@@ -6,6 +6,7 @@ import com.qualcomm.hardware.bosch.BHI260IMU;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -25,7 +26,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.List;
 @TeleOp
-public class FieldCentric extends LinearOpMode {
+public class FieldCentric extends OpMode {
 
     private static final boolean USE_WEBCAM = true;  // true for webcam, false for phone camera
 
@@ -37,8 +38,9 @@ public class FieldCentric extends LinearOpMode {
     public double motorPowerMultiplier = 1;
     double maxDistance;
     double servoPosition = 0;
+    IMU imu;
     @Override
-    public void runOpMode(){
+    public void init(){
         fl = hardwareMap.dcMotor.get("fl");
         bl = hardwareMap.dcMotor.get("bl");
         fr = hardwareMap.dcMotor.get("fr");
@@ -57,16 +59,25 @@ public class FieldCentric extends LinearOpMode {
         //dr = hardwareMap.get(DistanceSensor.class,"dr");
         double baseMaxDistance = 20;
 
+        //brake
+        fl.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        bl.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        fr.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        br.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         initAprilTag();
 
-        BHI260IMU imu = hardwareMap.get(BHI260IMU.class, "imu");
-        BHI260IMU.Parameters paramaters = new BHI260IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.LEFT, RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD));
-        imu.initialize(paramaters);
+        //BHI260IMU imu = hardwareMap.get(BHI260IMU.class, "imu");
+        //BHI260IMU.Parameters paramaters = new BHI260IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.LEFT, RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD));
+        //imu.initialize(paramaters);
+        imu = hardwareMap.get(IMU.class,"imu");
+        IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.LEFT, RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD));
+        imu.initialize(parameters);
 
-        waitForStart();
-        while (opModeIsActive()){
-            /*maxDistance = baseMaxDistance * Math.pow(1-gamepad1.left_stick_y,2)/3;
+    }
+    @Override
+    public void loop(){
+        /*maxDistance = baseMaxDistance * Math.pow(1-gamepad1.left_stick_y,2)/3;
             telemetry.addData("maxDistance",maxDistance);
             List<AprilTagDetection> currentDetections = aprilTag.getDetections();
             for (AprilTagDetection detection : currentDetections) {
@@ -97,70 +108,64 @@ public class FieldCentric extends LinearOpMode {
             else{
                 motorPowerMultiplier = 1;
             }*/
-            if(gamepad2.left_stick_y>0.1){
-                liftl.setPower(gamepad2.left_stick_y*0.5);
-                liftr.setPower(gamepad2.left_stick_y*0.5);
-            } else{
-                liftl.setPower(0);
-                liftr.setPower(0);
-            }
-            if (gamepad1.right_bumper) {
-                intake.setPower(0.4);
-            }else if(gamepad1.left_bumper){
-                intake.setPower(-0.28);
-            }else{
-                intake.setPower(0);
-            }
-            if(gamepad1.x){
-                imu.resetYaw();
-            }
-            if(gamepad2.a){
-                claw.setPosition(0.36);
-            }
-            if(gamepad2.b){
-                claw.setPosition(0.47);
-            }
-            /*if(gamepad2.right_stick_y>0.1){
-                if (gamepad2.right_stick_y > 0) {
-                    servoPosition = Math.max(0, Math.min(1, servoPosition)) + 0.01;
-                }else{
-                    servoPosition = Math.max(0, Math.min(1, servoPosition)) - 0.01;
-                }
-                claw.setPosition(servoPosition);
-            }*/
-            motorPowerMultiplier = 1;
-            double y = gamepad1.left_stick_y*motorPowerMultiplier; // Remember, this is reversed!
-            double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
-            double rx = gamepad1.right_stick_x;
-            double botHeading = -imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
-            double rotX = x * Math.cos(botHeading) - y * Math.sin(botHeading);
-            double rotY = x * Math.sin(botHeading) + y * Math.cos(botHeading);
-
-
-            double denominator = Math.max(abs(y) + abs(x) + abs(rx), 1);
-            double flp = -(rotY + rotX + rx) / denominator;
-            double blp = -(rotY - rotX + rx) / denominator;
-            double frp = -(rotY - rotX - rx) / denominator;
-            double brp = -(rotY + rotX - rx) / denominator;
-
-            flp = flp * (1 - gamepad1.right_trigger);
-            blp = blp * (1 - gamepad1.right_trigger);
-            frp = frp * (1 - gamepad1.right_trigger);
-            brp = brp * (1 - gamepad1.right_trigger);
-            flp = flp * (1 + 2*gamepad1.left_trigger);
-            blp = blp * (1 + 2*gamepad1.left_trigger);
-            frp = frp * (1 + 2*gamepad1.left_trigger);
-            brp = brp * (1 + 2*gamepad1.left_trigger);
-
-
-
-            telemetry.update();
-
-            fl.setPower(0.49*flp);
-            bl.setPower(0.49*blp);
-            fr.setPower(0.49*frp);
-            br.setPower(0.49*brp);
+        if(gamepad1.options){
+            imu.resetYaw();
         }
+        if(gamepad2.left_stick_y>0.1){
+            liftl.setPower(gamepad2.left_stick_y*0.5);
+            liftr.setPower(gamepad2.left_stick_y*0.5);
+        } else{
+            liftl.setPower(0);
+            liftr.setPower(0);
+        }
+        if (gamepad1.right_bumper) {
+            intake.setPower(0.4);
+        }else if(gamepad1.left_bumper){
+            intake.setPower(-0.28);
+        }else{
+            intake.setPower(0);
+        }
+        if(gamepad1.x){
+            imu.resetYaw();
+        }
+        if(gamepad2.a){
+            claw.setPosition(0.36);
+        }
+        if(gamepad2.b){
+            claw.setPosition(0.47);
+        }
+        motorPowerMultiplier = 1;
+        double y = gamepad1.left_stick_y*motorPowerMultiplier; // Remember, this is reversed!
+        double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
+        double rx = gamepad1.right_stick_x;
+        double botHeading = -imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);//might be degrees
+        double rotX = x * Math.cos(botHeading) - y * Math.sin(botHeading);
+        double rotY = x * Math.sin(botHeading) + y * Math.cos(botHeading);
+
+
+        double denominator = Math.max(abs(y) + abs(x) + abs(rx), 1);
+        double flp = -(rotY + rotX + rx) / denominator;
+        double blp = -(rotY - rotX + rx) / denominator;
+        double frp = -(rotY - rotX - rx) / denominator;
+        double brp = -(rotY + rotX - rx) / denominator;
+
+        flp = flp * (1 - gamepad1.right_trigger);
+        blp = blp * (1 - gamepad1.right_trigger);
+        frp = frp * (1 - gamepad1.right_trigger);
+        brp = brp * (1 - gamepad1.right_trigger);
+        flp = flp * (1 + 2*gamepad1.left_trigger);
+        blp = blp * (1 + 2*gamepad1.left_trigger);
+        frp = frp * (1 + 2*gamepad1.left_trigger);
+        brp = brp * (1 + 2*gamepad1.left_trigger);
+
+
+
+        telemetry.update();
+
+        fl.setPower(0.74*flp);
+        bl.setPower(0.74*blp);
+        fr.setPower(0.74*frp);
+        br.setPower(0.74*brp);
     }
     private void initAprilTag(){
         aprilTag = AprilTagProcessor.easyCreateWithDefaults();
