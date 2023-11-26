@@ -16,8 +16,8 @@ public class liftAnd4barServotest extends LinearOpMode {
 
     float encoderDifference;
     int liftposl, liftposr = 0;
-    double min = 0;
-    double max = 537;
+    double minLiftHeight = 0;
+    double maxLiftHeight = 537;
 
 
     double liftPower;
@@ -27,22 +27,17 @@ public class liftAnd4barServotest extends LinearOpMode {
         liftl = hardwareMap.dcMotor.get("liftl");
         liftr = hardwareMap.dcMotor.get("liftr");
         intake = hardwareMap.dcMotor.get("intake");
+
         claw = hardwareMap.servo.get("claw");
-        //arml = hardwareMap.servo.get("arml");
-        //armr = hardwareMap.servo.get("armr");
-        //arml.setPosition(0.6);
-        //armr.setPosition(0.4);
         claw.setPosition(1);
+
         liftr.setDirection(DcMotor.Direction.REVERSE);
         liftl.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         liftr.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
         liftr.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         liftl.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         liftr.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         liftl.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        //liftr.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         waitForStart();
         while(opModeIsActive()) {
@@ -63,21 +58,28 @@ public class liftAnd4barServotest extends LinearOpMode {
             liftposl = liftl.getCurrentPosition();
             liftposr = liftr.getCurrentPosition();
 
-            if(gamepad1.right_stick_y>0.1){//up
+            //Positive power is going up
+            //Negative power is going down
+
+            if(gamepad1.right_stick_y>0.1){
                 liftPower = gamepad1.right_stick_y/1;
-            }else if(gamepad1.right_stick_y<-0.1) {//down
+            }else if(gamepad1.right_stick_y<-0.1) {
                 liftPower = gamepad1.right_stick_y/3;
             }else{
                 liftPower = 0.1;
             }
 
+            //Adjust the right lift motor's (liftr) power based on encoder difference
+            //This helps make sure that the physical lift stays level
             encoderDifference = (float) (liftposl-liftposr);
-            liftrPower = liftPower + encoderDifference / 500;
-            if(liftposl >= max){
+            liftrPower = liftPower + encoderDifference / 500; //500 is arbitrarily chosen
+
+            //Make sure lift motors can't run past the physical limit of the lift
+            if(liftposl >= maxLiftHeight){
                 liftPower = Math.min(liftPower, 0);
                 liftrPower = Math.min(liftrPower, 0);
             }
-            if(liftposl <= min){
+            if(liftposl <= minLiftHeight){
                 liftPower = Math.max(liftPower, 0);
                 liftrPower = Math.max(liftrPower, 0);
             }
