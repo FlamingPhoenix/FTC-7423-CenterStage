@@ -48,7 +48,6 @@ public class PropDetector extends LinearOpMode {
     private static final String TFOD_MODEL_ASSET = "/sdcard/FIRST/tflitemodels/model.tflite";
 
     private static final boolean USE_WEBCAM = true;  // true for webcam, false for phone camera
-    private stretchProcessor stretchProcessor;
     private TfodProcessor tfod;
     PtzControl ptzControl;
     private VisionPortal visionPortal;
