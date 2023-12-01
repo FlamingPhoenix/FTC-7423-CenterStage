@@ -18,7 +18,7 @@ public class liftAnd4barServotest extends LinearOpMode {
     int liftposl, liftposr = 0;
     double minLiftHeight = 0;
     double maxLiftHeight = 537;
-
+    double liftHoldPower = 0.1; //the power to hold the lift in position
 
     double liftPower;
     double liftrPower;
@@ -53,31 +53,29 @@ public class liftAnd4barServotest extends LinearOpMode {
                 intake.setPower(0);
             }
 
-
-
             liftposl = liftl.getCurrentPosition();
             liftposr = liftr.getCurrentPosition();
 
             //Positive power is going up
             //Negative power is going down
 
-            if(gamepad1.right_stick_y>0.1){
-                liftPower = gamepad1.right_stick_y/1;
-            }else if(gamepad1.right_stick_y<-0.1) {
-                liftPower = gamepad1.right_stick_y/3;
+            if(gamepad1.right_stick_y<-0.1){ //going up
+                liftPower = -gamepad1.right_stick_y/1;
+            }else if(gamepad1.right_stick_y>0.1) {//going down
+                liftPower = -gamepad1.right_stick_y/3;
             }else{
-                liftPower = 0.1;
+                liftPower = liftHoldPower;
             }
 
             //Adjust the right lift motor's (liftr) power based on encoder difference
             //This helps make sure that the physical lift stays level
             encoderDifference = (float) (liftposl-liftposr);
-            liftrPower = liftPower + encoderDifference / 500; //500 is arbitrarily chosen
+            liftrPower = liftPower + encoderDifference / 200; //200 is arbitrarily chosen
 
             //Make sure lift motors can't run past the physical limit of the lift
             if(liftposl >= maxLiftHeight){
-                liftPower = Math.min(liftPower, 0);
-                liftrPower = Math.min(liftrPower, 0);
+                liftPower = Math.min(liftPower, liftHoldPower);
+                liftrPower = Math.min(liftrPower, liftHoldPower);
             }
             if(liftposl <= minLiftHeight){
                 liftPower = Math.max(liftPower, 0);
@@ -87,7 +85,9 @@ public class liftAnd4barServotest extends LinearOpMode {
             liftl.setPower(liftPower);
             liftr.setPower(liftrPower);
 
-            telemetry.addData("lift",String.format("l: %d; r: %d", liftl.getCurrentPosition(), liftr.getCurrentPosition()));
+            telemetry.addData("liftPos",String.format("l: %d; r: %d", liftl.getCurrentPosition(), liftr.getCurrentPosition()));
+            telemetry.addData("liftPower",String.format("l: %f, r: %f", liftPower, liftrPower));
+            telemetry.addData("input: ",String.format("%f", gamepad1.right_stick_y));
             telemetry.addData("encoder difference", encoderDifference);
             telemetry.update();
         }
