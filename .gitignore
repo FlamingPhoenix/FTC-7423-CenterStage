@@ -1,5 +1,5 @@
-FtcRobotController\build
+FtcRobotController/build
 .gradle
-TeamCode\build
+TeamCode/build
 .idea
 local.properties
