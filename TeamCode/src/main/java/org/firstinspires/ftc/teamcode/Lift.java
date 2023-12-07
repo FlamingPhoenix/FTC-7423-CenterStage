@@ -42,7 +42,7 @@ public class Lift {
         this.min = min;
         this.max = max;
     }
-    public Lift(DcMotor[] motors, Gamepad gp2){
+    public Lift(DcMotor[] motors, Gamepad gp2){//WIP
         liftMotors = motors;
     }
     public void setLiftDualMotor(){
@@ -57,6 +57,7 @@ public class Lift {
         }else{
             liftlPower = holdValue;
         }
+        liftrPower = liftlPower - encoderDifference/1000;
         if(liftposl >= max){
             liftlPower = Math.min(liftlPower, holdValue);
             liftrPower = Math.min(liftrPower, holdValue);
@@ -68,5 +69,18 @@ public class Lift {
 
         liftl.setPower(liftlPower);
         liftr.setPower(liftrPower);
+    }
+    public void setLiftDualMotorPos(double pos){
+        /**
+         * set the lift to a certain encoder position
+        @param pos encoder value
+        */
+
+        liftposl = liftl.getCurrentPosition();
+        liftposr = liftr.getCurrentPosition();
+        while(liftposl < pos){
+            liftl.setPower(0.5);
+            liftr.setPower(0.5);
+        }
     }
 }
