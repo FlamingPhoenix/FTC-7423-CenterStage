@@ -9,7 +9,6 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 @TeleOp
 public class liftAnd4barServotest extends LinearOpMode {
-    //NO LIFT YET
     DcMotor liftl,liftr, intake;
     Servo claw, arml, armr;
 
