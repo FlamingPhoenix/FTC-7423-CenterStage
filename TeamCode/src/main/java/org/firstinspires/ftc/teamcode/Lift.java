@@ -27,6 +27,16 @@ public class Lift {
 
         gamepad2 = gp2;
     }
+    public Lift(@NotNull DcMotor l, @NotNull DcMotor r){
+        liftposl = l.getCurrentPosition();
+        liftposr = r.getCurrentPosition();
+        liftl = l;
+        liftr = r;
+        liftl.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftr.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftl.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        liftr.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+    }
     public Lift(@NotNull DcMotor l, @NotNull DcMotor r, @NotNull Gamepad gp2, double min, double max){
         liftposl = l.getCurrentPosition();
         liftposr = r.getCurrentPosition();
