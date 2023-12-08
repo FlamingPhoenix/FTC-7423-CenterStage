@@ -1,0 +1,5 @@
+FtcRobotController/build
+.gradle
+TeamCode/build
+.idea
+local.properties

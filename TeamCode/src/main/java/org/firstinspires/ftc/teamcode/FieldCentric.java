@@ -2,18 +2,23 @@ package org.firstinspires.ftc.teamcode;
 
 import static java.lang.Math.abs;
 
-import android.hardware.Sensor;
-
+import com.qualcomm.hardware.bosch.BHI260IMU;
 import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
@@ -21,24 +26,32 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.List;
 @TeleOp
-public class FieldCentric extends LinearOpMode {
+public class FieldCentric extends OpMode {
 
     private static final boolean USE_WEBCAM = true;  // true for webcam, false for phone camera
 
-    DcMotor fl, fr, bl, br;
-    /*private AprilTagProcessor aprilTag;
+    DcMotor fl, fr, bl, br, intake,liftl,liftr;
+    Servo arml,armr, claw;
+    private AprilTagProcessor aprilTag;
     DistanceSensor dl,dr;
     private VisionPortal visionPortal;
     public double motorPowerMultiplier = 1;
-    double maxDistance;*/
-    BNO055IMU imu;
+    double maxDistance;
+    double servoPosition = 0;
+    IMU imu;
     @Override
-    public void runOpMode(){
+    public void init(){
         fl = hardwareMap.dcMotor.get("fl");
         bl = hardwareMap.dcMotor.get("bl");
         fr = hardwareMap.dcMotor.get("fr");
         br = hardwareMap.dcMotor.get("br");
+        intake = hardwareMap.dcMotor.get("intake");
 
+        claw = hardwareMap.servo.get("claw");
+        liftr = hardwareMap.dcMotor.get("liftr");
+        liftl = hardwareMap.dcMotor.get("liftl");
+        //arml = hardwareMap.servo.get("arml");
+        //armr = hardwareMap.servo.get("armr");
         fr.setDirection(DcMotorSimple.Direction.REVERSE);
         br.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -46,23 +59,25 @@ public class FieldCentric extends LinearOpMode {
         //dr = hardwareMap.get(DistanceSensor.class,"dr");
         double baseMaxDistance = 20;
 
+        //brake
+        fl.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        bl.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        fr.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        br.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        //initAprilTag();
+        initAprilTag();
 
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
-        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-        parameters.angleUnit           = BNO055IMU.AngleUnit.RADIANS;
-        parameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-        parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample OpMode
-        parameters.loggingEnabled      = true;
-        parameters.loggingTag          = "IMU";
-        parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
-
+        //BHI260IMU imu = hardwareMap.get(BHI260IMU.class, "imu");
+        //BHI260IMU.Parameters paramaters = new BHI260IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.LEFT, RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD));
+        //imu.initialize(paramaters);
+        imu = hardwareMap.get(IMU.class,"imu");
+        IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.LEFT, RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD));
         imu.initialize(parameters);
 
-        waitForStart();
-        while (opModeIsActive()){
-            /*maxDistance = baseMaxDistance * Math.pow(1-gamepad1.left_stick_y,2)/3;
+    }
+    @Override
+    public void loop(){
+        /*maxDistance = baseMaxDistance * Math.pow(1-gamepad1.left_stick_y,2)/3;
             telemetry.addData("maxDistance",maxDistance);
             List<AprilTagDetection> currentDetections = aprilTag.getDetections();
             for (AprilTagDetection detection : currentDetections) {
@@ -93,43 +108,66 @@ public class FieldCentric extends LinearOpMode {
             else{
                 motorPowerMultiplier = 1;
             }*/
-
-            double y = -gamepad1.left_stick_y;// Remember, this is reversed!
-            double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
-            double rx = gamepad1.right_stick_x;
-            telemetry.addData("x",x);
-            telemetry.addData("y",y);
-            double botHeading = -imu.getAngularOrientation().firstAngle;
-            double rotX = x * Math.cos(botHeading) - y * Math.sin(botHeading);
-            double rotY = x * Math.sin(botHeading) + y * Math.cos(botHeading);
-
-
-            double denominator = Math.max(abs(y) + abs(x) + abs(rx), 1);
-            double flp = -(rotY + rotX + rx) / denominator;
-            double blp = -(rotY - rotX + rx) / denominator;
-            double frp = -(rotY - rotX - rx) / denominator;
-            double brp = -(rotY + rotX - rx) / denominator;
-
-            flp = flp * (1 - gamepad1.right_trigger);
-            blp = blp * (1 - gamepad1.right_trigger);
-            frp = frp * (1 - gamepad1.right_trigger);
-            brp = brp * (1 - gamepad1.right_trigger);
-            flp = flp * (1 + 2*gamepad1.left_trigger);
-            blp = blp * (1 + 2*gamepad1.left_trigger);
-            frp = frp * (1 + 2*gamepad1.left_trigger);
-            brp = brp * (1 + 2*gamepad1.left_trigger);
-
-
-
-            telemetry.update();
-
-            fl.setPower(0.49*flp);
-            bl.setPower(0.49*blp);
-            fr.setPower(0.49*frp);
-            br.setPower(0.49*brp);
+        if(gamepad1.options){
+            imu.resetYaw();
         }
+        if(gamepad2.left_stick_y>0.1){
+            liftl.setPower(gamepad2.left_stick_y*0.5);
+            liftr.setPower(gamepad2.left_stick_y*0.5);
+        } else{
+            liftl.setPower(0);
+            liftr.setPower(0);
+        }
+        if (gamepad1.right_bumper) {
+            intake.setPower(0.4);
+        }else if(gamepad1.left_bumper){
+            intake.setPower(-0.28);
+        }else{
+            intake.setPower(0);
+        }
+        if(gamepad1.x){
+            imu.resetYaw();
+        }
+        if(gamepad2.a){
+            claw.setPosition(0.36);
+        }
+        if(gamepad2.b){
+            claw.setPosition(0.47);
+        }
+        motorPowerMultiplier = 1;
+        double y = gamepad1.left_stick_y*motorPowerMultiplier; // Remember, this is reversed!
+        double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
+        double rx = gamepad1.right_stick_x;
+        double botHeading = -imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);//might be degrees
+        double rotX = x * Math.cos(botHeading) - y * Math.sin(botHeading);
+        double rotY = x * Math.sin(botHeading) + y * Math.cos(botHeading);
+
+
+        double denominator = Math.max(abs(y) + abs(x) + abs(rx), 1);
+        double flp = -(rotY + rotX + rx) / denominator;
+        double blp = -(rotY - rotX + rx) / denominator;
+        double frp = -(rotY - rotX - rx) / denominator;
+        double brp = -(rotY + rotX - rx) / denominator;
+
+        flp = flp * (1 - gamepad1.right_trigger);
+        blp = blp * (1 - gamepad1.right_trigger);
+        frp = frp * (1 - gamepad1.right_trigger);
+        brp = brp * (1 - gamepad1.right_trigger);
+        flp = flp * (1 + 2*gamepad1.left_trigger);
+        blp = blp * (1 + 2*gamepad1.left_trigger);
+        frp = frp * (1 + 2*gamepad1.left_trigger);
+        brp = brp * (1 + 2*gamepad1.left_trigger);
+
+
+
+        telemetry.update();
+
+        fl.setPower(0.74*flp);
+        bl.setPower(0.74*blp);
+        fr.setPower(0.74*frp);
+        br.setPower(0.74*brp);
     }
-    /*private void initAprilTag(){
+    private void initAprilTag(){
         aprilTag = AprilTagProcessor.easyCreateWithDefaults();
 
         // Create the vision portal the easy way.
@@ -165,6 +203,6 @@ public class FieldCentric extends LinearOpMode {
         fr.setPower(rightFrontPower);
         bl.setPower(leftBackPower);
         br.setPower(rightBackPower);
-    }*/
+    }
 
 }
