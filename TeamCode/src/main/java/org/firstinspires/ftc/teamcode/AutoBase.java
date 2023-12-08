@@ -63,7 +63,6 @@ public abstract class AutoBase extends LinearOpMode {
 
     public float diameter = 4;
 
-    public MyIMU imu;
 
 
     public float startHeading;
@@ -419,95 +418,6 @@ public abstract class AutoBase extends LinearOpMode {
 
     }
 
-    public void Drive (float distance, Direction d) {
-        //tune the program by starting with Kd at 0
-        //then increase Kd until the robot will approach the position slowly with little overshoot
-
-        float Kp = 0.1f;
-        float Ki = 0.01f;
-
-        float Kd = 0; //tune this
-
-        float reference = Math.round((PPR * distance)/(diameter * (float)Math.PI));
-        if (d == Direction.BACKWARD)
-            reference = -reference;
-        double integralSum = 0;
-        float lastError = 0;
-        float out;
-        float firstAngle = imu.getAdjustedAngle();
-        float adjustmentAngle = imu.getAdjustedAngle();
-        float currentAngle;
-        float adjustment = 1;//need to tune
-        ElapsedTime timer = new ElapsedTime();
-        bl.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        bl.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        int currentPosition = 0;
-
-        while (currentPosition < reference && opModeIsActive()) {
-            currentPosition = Math.abs(bl.getCurrentPosition());
-            float error = reference - currentPosition;
-            double derivative = (error - lastError)/timer.seconds();//derivatives are instantaneous rates of change; this is a difference quotient - essentially just a slope formula
-            integralSum = integralSum + (error*timer.seconds());//integral through riemann sums - approximating area under the curve with a bunch of rectangles
-            out = (float)((Kp*error)+(Ki*error)+(Kd*derivative));
-
-            if (Math.abs(firstAngle) >= 178) {//any number (1,179) works here
-                currentAngle = imu.getAdjustedAngle() - adjustmentAngle;
-                firstAngle = 0;
-            } else
-                currentAngle = imu.getAdjustedAngle();
-
-
-            if (Math.abs(currentAngle - firstAngle) > 1) { //error > 1 degree
-                if ((currentAngle - firstAngle) < 0)
-                    setMaxPower((out + adjustment), out, (out + adjustment), out);
-                else
-                    setMaxPower(out, (out + adjustment), out, (out + adjustment));
-            } else
-                setMaxPower(out, out, out, out);
-
-            lastError = error;
-
-
-
-            timer.reset();
-        }
-
-        StopAll();
-
-    }
-    public void Drive (float power, float distance, Direction d) {
-        float x = (PPR * distance)/(diameter * (float)Math.PI);
-
-        int targetEncoderValue = Math.round(x);
-
-        fl.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        fl.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        int currentPosition = 0;
-
-        while (currentPosition < targetEncoderValue && opModeIsActive()) {
-            currentPosition = Math.abs(fl.getCurrentPosition());
-            if (d == Direction.FORWARD) {
-                fl.setPower(-power);
-                fr.setPower(-power);
-                bl.setPower(-power);
-                br.setPower(-power);
-
-
-            }
-            if (d == Direction.BACKWARD) {
-                fl.setPower(power);
-                fr.setPower(power);
-                bl.setPower(power);
-                br.setPower(power);
-
-            }
-        }
-
-        StopAll();
-        telemetry.addLine("DONE");
-        telemetry.update();
-
-    }
 
     public void StopAllWheels(){
         fr.setPower(0);
@@ -518,58 +428,7 @@ public abstract class AutoBase extends LinearOpMode {
 
 
 
-    public void Turn (float power, double angle, Direction turnDirection, MyIMU imu) {
 
-
-        Orientation startOrientation = imu.getAngularOrientation();
-
-        double targetangle;
-        double currentangle;
-
-        imu.reset(turnDirection);
-        if (turnDirection == Direction.COUNTERCLOCKWISE) {
-
-            targetangle = startOrientation.firstAngle + angle;
-            currentangle = startOrientation.firstAngle;
-
-            while (currentangle < targetangle && opModeIsActive()) {
-
-                currentangle = imu.getAdjustedAngle();
-
-                Log.i("[phoenix:angleInfo]", String.format("startingAngle = %f, targetAngle = %f, currentAngle = %f", startOrientation.firstAngle, targetangle, currentangle));
-
-                fl.setPower(power);
-                bl.setPower(power);
-                fr.setPower(-power);
-                br.setPower(-power);
-
-            }
-        }
-
-        else {
-
-            targetangle = startOrientation.firstAngle - angle;
-            currentangle = startOrientation.firstAngle;
-
-            while (currentangle > targetangle && opModeIsActive()) {
-
-                currentangle = imu.getAdjustedAngle();
-
-                this.telemetry.addData("CurrentAngle =: %f", currentangle);
-                this.telemetry.update();
-
-                fl.setPower(-power);
-                bl.setPower(-power);
-                fr.setPower(power);
-                br.setPower(power);
-
-
-            }
-        }
-
-        StopAll();
-
-    }
 
     public void Strafe(float power, float distance, Direction d) {
         float x = (PPR * (2 * distance))/(diameter * (float)Math.PI);
@@ -652,86 +511,6 @@ public abstract class AutoBase extends LinearOpMode {
 
     }
 
-    public void DriveHeading(float power, float distance, float heading, float adjust, Direction turnDirection){
-
-        power = Math.abs(power);
-
-        imu.reset(Direction.NONE);
-
-        float currentHeading = imu.getAdjustedAngle();
-
-        float x = (PPR * distance)/(diameter * (float)Math.PI);
-
-        int targetEncoderValue = Math.round(x);
-
-        Log.i("[phoenix:startValues]", String.format("Heading: %f; Target Encoder: %d", heading, targetEncoderValue));
-
-
-        bl.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        bl.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        int currentPosition = 0;
-
-        while (currentPosition < targetEncoderValue && opModeIsActive()) {
-            Log.i("[phoenix:currentHead]", String.format("Current Heading: %f; heading: %f", currentHeading, heading));
-            float adjustmentPower = 0;
-            currentHeading = imu.getAdjustedAngle();
-
-            if (currentHeading > 0 && heading > 0) {
-                if (currentHeading - heading > 1) {
-                    adjustmentPower = adjust;
-                } else if (currentHeading - heading < -1) {
-                    adjustmentPower = -adjust;
-                }
-            } else if (currentHeading < 0 && heading < 0) {
-                if (currentHeading - heading > 1) {
-                    adjustmentPower = adjust;
-                } else if (currentHeading - heading < -1) {
-                    adjustmentPower = -adjust;
-                }
-            } else if (currentHeading < 0 && heading > 0) {
-                if (currentHeading - heading < -1) {
-                    adjustmentPower = -adjust;
-                }
-            } else {
-                if (currentHeading - heading > 1) {
-                    adjustmentPower = adjust;
-                } else if (currentHeading - heading < -1) {
-                    adjustmentPower = -adjust;
-                }
-            }
-
-            if (turnDirection == Direction.BACKWARD)
-                adjustmentPower = adjustmentPower * -1;
-
-            currentPosition = Math.abs(bl.getCurrentPosition());
-
-            float frontRight = power;
-            float frontLeft = power;
-            float backRight = power;
-            float backLeft = power;
-
-            if (adjustmentPower > 0) {  //positive means give more power to the left
-                frontLeft = (power + adjustmentPower);
-                backLeft = (power + adjustmentPower);
-            }
-            else if (adjustmentPower < 0) {
-                frontRight = (power - adjustmentPower);
-                backRight = (power - adjustmentPower);
-            }
-
-            if (turnDirection == Direction.FORWARD) {
-                setMaxPower(frontLeft, frontRight, backLeft, backRight);
-            } else if (turnDirection == Direction.BACKWARD) {
-                setMaxPower(-frontLeft, -frontRight, -backLeft, -backRight);
-            }
-
-
-            Log.i("[phoenix:wheelPowers]", String.format("frontLeft: %f; frontRight: %f; backLeft: %f; backRight: %f", frontLeft, frontRight, backLeft, backRight));
-        }
-
-        StopAll();
-
-    }
 
     public void setMaxPower(float flp, float frp, float blp, float brp) {
         float max = Max(Math.abs(flp), Math.abs(frp), Math.abs(blp), Math.abs(brp));
@@ -754,88 +533,7 @@ public abstract class AutoBase extends LinearOpMode {
 
 
 
-    public void StrafeUntilHeading(float power, float multiplier, float heading, float distance, Direction d) {
 
-        float x = (PPR * (2 * distance))/(diameter * (float)Math.PI);
-
-        int targetEncoderValue = Math.round(x);
-        float powerAdjustRatio = 1 + Math.abs(multiplier);
-
-        float flp, frp, blp, brp;
-
-        bl.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        bl.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        int currentPosition = 0;
-
-        if (d == Direction.LEFT) {
-            while (currentPosition < targetEncoderValue && opModeIsActive()) {
-                currentPosition = Math.abs(bl.getCurrentPosition());
-                float currentHeading = imu.getAdjustedAngle();
-                float angleDiff = Math.abs(currentPosition-heading);
-                if (angleDiff > 20) {
-                    powerAdjustRatio = 1+Math.abs(multiplier);
-                } else if (angleDiff > 5) {
-                    powerAdjustRatio = 1+Math.abs(multiplier*0.5f);
-                } else {
-                    powerAdjustRatio = 1+Math.abs(multiplier*0.1f);
-                }
-
-                flp = -power;
-                frp = power;
-                blp = power;
-                brp = -power;
-
-                if (currentHeading * heading < 0 && currentHeading > 0) {
-                    heading += 360;
-                } if (currentHeading * heading < 0  && currentHeading < 0) {
-                    heading -= 360;
-                }
-
-                if (currentHeading < heading) {
-                    blp /= powerAdjustRatio;
-                    brp /= powerAdjustRatio;
-                }
-                else if (currentHeading > heading) {
-                    flp /= powerAdjustRatio;
-                    frp /= powerAdjustRatio;
-
-                }
-
-                setMaxPower(flp, frp, blp, brp);
-                Log.i("[phoenix:strafeHeading]", String.format("currentHeading: %f, heading: %f, flp: %f, frp: %f, blp: %f, brp: %f", currentHeading, heading, flp, frp, blp, brp));
-            }
-        } else {
-            while (currentPosition < targetEncoderValue && opModeIsActive()) {
-                currentPosition = Math.abs(bl.getCurrentPosition());
-                float currentHeading = imu.getAdjustedAngle();
-
-                flp = power;
-                frp = -power;
-                blp = -power;
-                brp = power;
-
-                if (currentHeading * heading < 0 && currentHeading > 0) {
-                    heading += 360;
-                } if (currentHeading * heading < 0  && currentHeading < 0) {
-                    heading -= 360;
-                }
-
-                if (currentHeading < heading) {
-                    flp /= powerAdjustRatio;
-                    frp /= powerAdjustRatio;
-                }
-                else if (currentHeading > heading) {
-                    blp /= powerAdjustRatio;
-                    brp /= powerAdjustRatio;
-                }
-
-                setMaxPower(flp, frp, blp, brp);
-                Log.i("[phoenix:strafeHeading]", String.format("currentHeading: %f, heading: %f, flp: %f, frp: %f, blp: %f, brp: %f", currentHeading, heading, flp, frp, blp, brp));
-            }
-        }
-
-        StopAll();
-    }
 
     /*public void MovePulley (float power, int stage) {
 
