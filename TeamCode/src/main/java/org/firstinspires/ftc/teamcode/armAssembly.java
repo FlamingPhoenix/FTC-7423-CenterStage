@@ -10,7 +10,7 @@ public class armAssembly { //12-7: still in progress
     Lift lift;
     boolean clawOpened = false;
     boolean armExtended = false;
-    int clawPos = 0;
+    int currentClawPos = 0;
     ElapsedTime timer;
     //extend arm only when claw is closed
     //rest claw when arm is retracted
@@ -29,7 +29,7 @@ public class armAssembly { //12-7: still in progress
     public void setLiftPos(double pos){
         lift.setLiftDualMotorPos(pos);
     }
-    public void setClawPos(double pos){
+    public void setCurrentClawPos(double pos){
         claw.setPos(pos);
     }
     public void setArmPos(double pos){
@@ -45,10 +45,10 @@ public class armAssembly { //12-7: still in progress
         servoArm.extend();
         armExtended = true;
     }
-    public void setClaw(int posID){
+    public void setClaw(clawPos posID){
         claw.ezSetPos(posID);
-        clawPos = posID;
-        if(clawPos > 0){
+        currentClawPos = posID.id;
+        if(currentClawPos > 0){
             clawOpened = true;
         }else{
             clawOpened = false;
