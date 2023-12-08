@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class armAssembly { //12-7: still in progress
     Claw claw;
-    servoArm servoArm;
+    ServoArm servoArm;
     Lift lift;
     boolean clawOpened = false;
     boolean armExtended = false;
@@ -14,7 +14,7 @@ public class armAssembly { //12-7: still in progress
     ElapsedTime timer;
     //extend arm only when claw is closed
     //rest claw when arm is retracted
-    public armAssembly(@NotNull Claw claw, @NotNull servoArm servoArm, @NotNull Lift lift){
+    public armAssembly(@NotNull Claw claw, @NotNull ServoArm servoArm, @NotNull Lift lift){
         this.claw = claw;
         this.servoArm = servoArm;
         this.lift = lift;
