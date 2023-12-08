@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp
 public class liftAnd4barServotest extends LinearOpMode {
@@ -28,6 +29,8 @@ public class liftAnd4barServotest extends LinearOpMode {
         liftr = hardwareMap.dcMotor.get("liftr");
         intake = hardwareMap.dcMotor.get("intake");
 
+        arml = hardwareMap.servo.get("arml");
+        armr = hardwareMap.servo.get("armr");
         claw = hardwareMap.servo.get("claw");
         claw.setPosition(1);
 

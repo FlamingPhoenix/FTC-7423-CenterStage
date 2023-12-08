@@ -9,7 +9,7 @@ public class Claw {
 
     private double openPos1, closePos,openPos2,restPos;
 
-    double posIDS[] = {restPos,closePos,openPos1,openPos2};
+    double posIDS[];
     public Claw(@NotNull Servo claw,@NotNull double openPos,@NotNull double closePos){
         this.claw = claw;
         this.openPos1 = openPos;
@@ -17,10 +17,11 @@ public class Claw {
     }
     public Claw(@NotNull Servo claw, @NotNull double openPos1, @NotNull double openPos2, @NotNull double closePos, @NotNull double restPos){
         this.claw = claw;
-        this.openPos1 = openPos1;
-        this.openPos2 = openPos2;
-        this.closePos = closePos;
-        this.restPos = restPos;
+        this.openPos1 = openPos1;//release bottom pixel
+        this.openPos2 = openPos2;//full release
+        this.closePos = closePos; //grab both pixels
+        this.restPos = restPos; //wait for pixel intake
+        posIDS = new double[]{closePos,openPos1,openPos2,restPos};
     }
     public void ezSetPos(int posID){
         if(posID<posIDS.length) {

@@ -70,6 +70,31 @@ public class Lift {
         liftl.setPower(liftlPower);
         liftr.setPower(liftrPower);
     }
+    public void setLiftDualMotor(double rightStickY){
+        liftposl = liftl.getCurrentPosition();
+        liftposr = liftr.getCurrentPosition();
+        encoderDifference = liftposl - liftposr;
+        double liftlPower,liftrPower = 0;
+        if(rightStickY>0.1){//up
+            liftlPower = rightStickY;
+        }else if(rightStickY<-0.1) {//down
+            liftlPower = rightStickY/3;
+        }else{
+            liftlPower = holdValue;
+        }
+        liftrPower = liftlPower - encoderDifference/1000;
+        if(liftposl >= max){
+            liftlPower = Math.min(liftlPower, holdValue);
+            liftrPower = Math.min(liftrPower, holdValue);
+        }
+        if(liftposl <= min){
+            liftlPower = Math.max(liftlPower, holdValue);
+            liftrPower = Math.max(liftrPower, holdValue);
+        }
+
+        liftl.setPower(liftlPower);
+        liftr.setPower(liftrPower);
+    }
     public void setLiftDualMotorPos(double pos){
         /**
          * set the lift to a certain encoder position
@@ -82,5 +107,8 @@ public class Lift {
             liftl.setPower(0.5);
             liftr.setPower(0.5);
         }
+    }
+    public int getLiftPos(){
+        return liftl.getCurrentPosition();
     }
 }
