@@ -10,7 +10,6 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp
 public class liftAnd4barServotest extends LinearOpMode {
-    //NO LIFT YET
     DcMotor liftl,liftr, intake;
     Servo claw, arml, armr;
 
