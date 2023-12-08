@@ -11,7 +11,6 @@ public class armAssemblyTeleOp {
     Gamepad gamepad1, gamepad2;
     boolean clawOpened = false;
     boolean armExtended = false;
-    int clawPos = 0;
     double rightStickY;
     boolean liftGoDown = false;//change from gamepad
     public armAssemblyTeleOp(@NotNull Claw claw, @NotNull servoArm servoArm, @NotNull Lift lift, Gamepad gamepad1, Gamepad gamepad2){
@@ -34,10 +33,10 @@ public class armAssemblyTeleOp {
         }
 
         if(gamepad2.a){
-            claw.ezSetPos(1);
+            claw.ezSetPos(clawPos.OPEN1);
         }
         if(gamepad1.b){
-            claw.ezSetPos(2);
+            claw.ezSetPos(clawPos.OPEN2);
         }
 
         rightStickY = gamepad2.right_stick_y;
@@ -47,7 +46,7 @@ public class armAssemblyTeleOp {
 
             if(lift.getLiftPos()<10){
                 liftGoDown = false;
-                claw.ezSetPos(3);//USE ENUM (rest)
+                claw.ezSetPos(clawPos.REST);
             }
         }
 
