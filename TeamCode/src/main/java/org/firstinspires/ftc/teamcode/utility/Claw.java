@@ -1,7 +1,8 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.utility;
 
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.teamcode.clawPos;
 import org.jetbrains.annotations.NotNull;
 
 public class Claw {

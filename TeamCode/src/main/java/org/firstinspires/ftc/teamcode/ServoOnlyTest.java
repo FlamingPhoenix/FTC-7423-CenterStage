@@ -4,6 +4,8 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.teamcode.utility.Claw;
+
 @TeleOp
 public class ServoOnlyTest extends OpMode {
     Claw claw;
