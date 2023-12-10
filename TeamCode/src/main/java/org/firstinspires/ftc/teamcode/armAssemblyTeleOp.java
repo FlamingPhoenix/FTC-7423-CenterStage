@@ -12,7 +12,8 @@ public class armAssemblyTeleOp {
     boolean clawOpened = false;
     boolean armExtended = false;
     double rightStickY;
-    boolean liftGoDown = false;//change from gamepad
+    boolean returnToRest = false;//change from gamepad
+    boolean extendToDrop = false;
     public armAssemblyTeleOp(@NotNull Claw claw, @NotNull ServoArm servoArm, @NotNull Lift lift, Gamepad gamepad1, Gamepad gamepad2){
         this.claw = claw;
         this.servoArm = servoArm;
@@ -22,12 +23,14 @@ public class armAssemblyTeleOp {
     }
     public void execute(){
         if(gamepad2.dpad_down){//LIFT DOWN, ARM RETRACT, CLAW CLOSE
-            liftGoDown = true;
+            extendToDrop = false;
+            returnToRest = true;
             claw.close();
             servoArm.retract();
         }
-        if(gamepad2.dpad_up){//ARM EXTEND, CLAW CLOSE
-            liftGoDown = false;
+        if(gamepad2.dpad_up){//LIFT UP, ARM EXTEND, CLAW CLOSE
+            extendToDrop = true;
+            returnToRest = false;
             claw.close();
             servoArm.extend();
         }
@@ -43,15 +46,23 @@ public class armAssemblyTeleOp {
             claw.close();
         }
 
-        if(liftGoDown) {//WE WANT LIFT TO GO DOWN(IGNORE GAMEPAD)
-            rightStickY = -0.111111;//CHANGE -- ~-0.5 // FOR TESTING, DON'T BREAK CLAW
+        rightStickY = gamepad2.right_stick_y;
+
+        if(Math.abs(rightStickY) >= 0.01){ //If driver is giving an input, they probably want to override the lift power
+            extendToDrop = false;
+            returnToRest = false;
+        }
+
+        if(returnToRest) {
+            rightStickY = -0.111111;//CHANGE --~-0.5 // FOR TESTING, DON'T BREAK CLAW
 
             if(lift.getLiftPos()<5){//LIFT IS AT LOWEST
-                liftGoDown = false;
                 claw.ezSetPos(clawPos.REST);
+                returnToRest = false;
             }
-        }else{
-            rightStickY = gamepad2.right_stick_y;//USE GAMEPAD INPUT
+        }
+        if(extendToDrop) {
+            rightStickY = 0.25;//set to low speed for testing
         }
 
         lift.setLiftDualMotor(rightStickY);
