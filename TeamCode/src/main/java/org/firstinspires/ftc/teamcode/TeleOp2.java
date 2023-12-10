@@ -21,6 +21,7 @@ public class TeleOp2 extends OpMode {
     Claw claw;
     Lift lift;
     ServoArm servoArm;
+    armAssemblyTeleOp armAssembly;
     @Override
     public void init(){
         // DC MOTORS // DC MOTORS // DC MOTORS // DC MOTORS // DC MOTORS // DC MOTORS // DC MOTORS // DC MOTORS //
@@ -41,6 +42,9 @@ public class TeleOp2 extends OpMode {
         claw = new Claw(clawServo,0.9,0.8,1,0.6); //NOT FINAL - DO NOT RUN!!!!!!!!!!!!
         servoArm = new ServoArm(arml,armr,0.93,0.3); //NOT FINAL - DO NOT RUN!!!!!!!!!!
         lift = new Lift(liftr,liftl,gamepad2);
+
+        armAssembly = new armAssemblyTeleOp(claw, servoArm, lift, gamepad1, gamepad2);
+
         fr.setDirection(DcMotorSimple.Direction.REVERSE);
         br.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -76,13 +80,13 @@ public class TeleOp2 extends OpMode {
         frp = frp * (1 + 2*gamepad1.left_trigger);
         brp = brp * (1 + 2*gamepad1.left_trigger);
 
-
-
-        telemetry.update();
-
         fl.setPower(0.49*flp);
         bl.setPower(0.49*blp);
         fr.setPower(0.49*frp);
         br.setPower(0.49*brp);
+
+        armAssembly.execute();
+
+        telemetry.update();
     }
 }
