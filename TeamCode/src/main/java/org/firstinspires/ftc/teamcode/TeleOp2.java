@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -34,6 +35,8 @@ public class TeleOp2 extends OpMode {
     armAssemblyTeleOp armAssembly;
     private AprilTagProcessor aprilTag;
     private VisionPortal visionPortal;
+    double oldDistanceFromBackdrop = baseMaxDistance;
+    ElapsedTime elapsedTime;
     @Override
     public void init(){
         // DC MOTORS // DC MOTORS // DC MOTORS // DC MOTORS // DC MOTORS // DC MOTORS // DC MOTORS // DC MOTORS //
@@ -54,6 +57,8 @@ public class TeleOp2 extends OpMode {
         dm = hardwareMap.get(DistanceSensor.class,"dm");
 
         initAprilTag();
+
+        elapsedTime.reset();
 
         claw = new Claw(clawServo,0.9,0.8,1,0.6); //NOT FINAL - DO NOT RUN!!!!!!!!!!!!
         servoArm = new ServoArm(arml,armr,0.93,0.3); //NOT FINAL - DO NOT RUN!!!!!!!!!!
@@ -99,7 +104,10 @@ public class TeleOp2 extends OpMode {
 
 
         //Prevent crashing into backdrop and possibly descoring pixels
-        double backdropApproachSpeed = 0.5;//Math.pow(1-gamepad1.left_stick_y,2)/3; INCOMPLETE: need to update to use speed robot is heading into backdrop
+        double distanceFromBackdrop = dm.getDistance(DistanceUnit.INCH);
+        double backdropApproachSpeed = (Math.max(oldDistanceFromBackdrop - distanceFromBackdrop, 0))/(96*elapsedTime.seconds());
+        elapsedTime.reset(); //UNTESTED
+
         double maxDistance = baseMaxDistance * Math.pow(backdropApproachSpeed, 2);
         double motorPowerMultiplier = 1;
 
@@ -115,9 +123,12 @@ public class TeleOp2 extends OpMode {
             }
         }
 
-        if((dm.getDistance(DistanceUnit.INCH) < maxDistance)){
+        if(distanceFromBackdrop < maxDistance){
+            oldDistanceFromBackdrop = dm.getDistance(DistanceUnit.INCH);
             motorPowerMultiplier = Math.pow(backdropApproachSpeed, 2);
         }
+
+        oldDistanceFromBackdrop = Math.min(distanceFromBackdrop, baseMaxDistance);
 
         //Actually set the power of the motors
         fl.setPower(0.49*flp*motorPowerMultiplier);
