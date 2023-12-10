@@ -7,21 +7,30 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+
+import java.util.List;
 
 public class TeleOp2 extends OpMode {
+    double baseMaxDistance = 40;
     DcMotor fl, fr, bl, br, intake, liftl, liftr;
     Servo clawServo,arml,armr;
+    DistanceSensor dm;
     IMU imu;
     Claw claw;
     Lift lift;
     ServoArm servoArm;
     armAssemblyTeleOp armAssembly;
+    private AprilTagProcessor aprilTag;
     @Override
     public void init(){
         // DC MOTORS // DC MOTORS // DC MOTORS // DC MOTORS // DC MOTORS // DC MOTORS // DC MOTORS // DC MOTORS //
@@ -39,6 +48,8 @@ public class TeleOp2 extends OpMode {
         armr = hardwareMap.servo.get("armr");
         arml = hardwareMap.servo.get("arml");
 
+        dm = hardwareMap.get(DistanceSensor.class,"dm");
+
         claw = new Claw(clawServo,0.9,0.8,1,0.6); //NOT FINAL - DO NOT RUN!!!!!!!!!!!!
         servoArm = new ServoArm(arml,armr,0.93,0.3); //NOT FINAL - DO NOT RUN!!!!!!!!!!
         lift = new Lift(liftr,liftl,gamepad2);
@@ -54,6 +65,7 @@ public class TeleOp2 extends OpMode {
     }
     @Override
     public void loop(){
+        //Calculate motor powers for field centric drive
         double y = -gamepad1.left_stick_y;// Remember, this is reversed!
         double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
         double rx = -gamepad1.right_stick_x;
@@ -80,13 +92,38 @@ public class TeleOp2 extends OpMode {
         frp = frp * (1 + 2*gamepad1.left_trigger);
         brp = brp * (1 + 2*gamepad1.left_trigger);
 
-        fl.setPower(0.49*flp);
-        bl.setPower(0.49*blp);
-        fr.setPower(0.49*frp);
-        br.setPower(0.49*brp);
 
+        //Prevent crashing into backdrop and possibly descoring pixels
+        double backdropApproachSpeed = 0.5;//Math.pow(1-gamepad1.left_stick_y,2)/3; INCOMPLETE: need to update to use speed robot is heading into backdrop
+        double maxDistance = baseMaxDistance * Math.pow(backdropApproachSpeed, 2);
+        double motorPowerMultiplier = 1;
+
+        telemetry.addData("maxDistance",maxDistance);
+        List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+        for (AprilTagDetection detection : currentDetections) {
+            if(detection.metadata!=null){
+                telemetry.addData("aprilTag","detected");
+                telemetry.addData("id",detection.id);
+                if ((detection.ftcPose.y < maxDistance) && detection.id >= 1 && detection.id <= 6) {
+                    motorPowerMultiplier = Math.pow(backdropApproachSpeed, 2);
+                }
+            }
+        }
+
+        if((dm.getDistance(DistanceUnit.INCH) < maxDistance)){
+            motorPowerMultiplier = Math.pow(backdropApproachSpeed, 2);
+        }
+
+        //Actually set the power of the motors
+        fl.setPower(0.49*flp*motorPowerMultiplier);
+        bl.setPower(0.49*blp*motorPowerMultiplier);
+        fr.setPower(0.49*frp*motorPowerMultiplier);
+        br.setPower(0.49*brp*motorPowerMultiplier);
+
+        //Run armAssembly
         armAssembly.execute();
 
+        //Run intake
         if(gamepad1.right_trigger > 0.1){
             intake.setPower(gamepad1.right_trigger/2);
         }else{
