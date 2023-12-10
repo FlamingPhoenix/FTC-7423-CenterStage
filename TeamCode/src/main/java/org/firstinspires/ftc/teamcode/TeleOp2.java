@@ -1,11 +1,18 @@
 package org.firstinspires.ftc.teamcode;
 
+import static java.lang.Math.abs;
+import static java.lang.Math.toRadians;
+
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
+
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 
 public class TeleOp2 extends OpMode {
     DcMotor fl, fr, bl, br, intake, liftl, liftr;
@@ -43,6 +50,39 @@ public class TeleOp2 extends OpMode {
     }
     @Override
     public void loop(){
+        double y = -gamepad1.left_stick_y;// Remember, this is reversed!
+        double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
+        double rx = -gamepad1.right_stick_x;
+        telemetry.addData("x",x);
+        telemetry.addData("y",y);
+        double botHeading = -imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS).firstAngle;
+        double rotX = x * Math.cos(botHeading) - y * Math.sin(botHeading);
+        double rotY = x * Math.sin(botHeading) + y * Math.cos(botHeading);
 
+        intake.setPower(gamepad2.right_trigger);
+
+        double denominator = Math.max(abs(y) + abs(x) + abs(rx), 1);
+        double flp = -(rotY + rotX + rx) / denominator;
+        double blp = -(rotY - rotX + rx) / denominator;
+        double frp = -(rotY - rotX - rx) / denominator;
+        double brp = -(rotY + rotX - rx) / denominator;
+
+        flp = flp * (1 - gamepad1.right_trigger);
+        blp = blp * (1 - gamepad1.right_trigger);
+        frp = frp * (1 - gamepad1.right_trigger);
+        brp = brp * (1 - gamepad1.right_trigger);
+        flp = flp * (1 + 2*gamepad1.left_trigger);
+        blp = blp * (1 + 2*gamepad1.left_trigger);
+        frp = frp * (1 + 2*gamepad1.left_trigger);
+        brp = brp * (1 + 2*gamepad1.left_trigger);
+
+
+
+        telemetry.update();
+
+        fl.setPower(0.49*flp);
+        bl.setPower(0.49*blp);
+        fr.setPower(0.49*frp);
+        br.setPower(0.49*brp);
     }
 }
