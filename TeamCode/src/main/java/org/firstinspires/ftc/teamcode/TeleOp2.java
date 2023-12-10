@@ -87,6 +87,12 @@ public class TeleOp2 extends OpMode {
 
         armAssembly.execute();
 
+        if(gamepad1.right_trigger > 0.1){
+            intake.setPower(gamepad1.right_trigger/2);
+        }else{
+            intake.setPower(0);
+        }
+
         telemetry.update();
     }
 }
