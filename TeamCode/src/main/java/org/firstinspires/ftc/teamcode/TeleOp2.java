@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.toRadians;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -10,10 +11,8 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.teamcode.utility.ArmAssemblyTeleOp;
-import org.firstinspires.ftc.teamcode.utility.Claw;
-import org.firstinspires.ftc.teamcode.utility.Lift;
-import org.firstinspires.ftc.teamcode.utility.ServoArm;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 
 public class TeleOp2 extends OpMode {
     DcMotor fl, fr, bl, br, intake, liftl, liftr;
@@ -22,7 +21,7 @@ public class TeleOp2 extends OpMode {
     Claw claw;
     Lift lift;
     ServoArm servoArm;
-    ArmAssemblyTeleOp armAssembly;
+    armAssemblyTeleOp armAssembly;
     @Override
     public void init(){
         // DC MOTORS // DC MOTORS // DC MOTORS // DC MOTORS // DC MOTORS // DC MOTORS // DC MOTORS // DC MOTORS //
@@ -35,19 +34,17 @@ public class TeleOp2 extends OpMode {
 
         liftr = hardwareMap.dcMotor.get("liftr");
         liftl = hardwareMap.dcMotor.get("liftl");
-
         // SERVOS // SERVOS // SERVOS // SERVOS // SERVOS // SERVOS // SERVOS // SERVOS // SERVOS // SERVOS //
         clawServo = hardwareMap.servo.get("claw");
         armr = hardwareMap.servo.get("armr");
         arml = hardwareMap.servo.get("arml");
 
-        // CONTROLLER CLASSES // CONTROLLER CLASSES // CONTROLLER CLASSES // CONTROLLER CLASSES // CONTROLLER CLASSES //
         claw = new Claw(clawServo,0.9,0.8,1,0.6); //NOT FINAL - DO NOT RUN!!!!!!!!!!!!
         servoArm = new ServoArm(arml,armr,0.93,0.3); //NOT FINAL - DO NOT RUN!!!!!!!!!!
-        lift = new Lift(liftr,liftl);
-        armAssembly = new ArmAssemblyTeleOp(claw,servoArm,lift,gamepad1,gamepad2);
+        lift = new Lift(liftr,liftl,gamepad2);
 
-        // INITIALIZATION PARAMETERS // INITIALIZATION PARAMETERS // INITIALIZATION PARAMETERS // INITIALIZATION PARAMETERS //
+        armAssembly = new armAssemblyTeleOp(claw, servoArm, lift, gamepad1, gamepad2);
+
         fr.setDirection(DcMotorSimple.Direction.REVERSE);
         br.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -57,16 +54,12 @@ public class TeleOp2 extends OpMode {
     }
     @Override
     public void loop(){
-        //armAssembly all-in-one function
-        armAssembly.execute();
-
-        //field centric TODO: create a field centric drive class
         double y = -gamepad1.left_stick_y;// Remember, this is reversed!
         double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
         double rx = -gamepad1.right_stick_x;
         telemetry.addData("x",x);
         telemetry.addData("y",y);
-        double botHeading = -imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+        double botHeading = -imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS).firstAngle;
         double rotX = x * Math.cos(botHeading) - y * Math.sin(botHeading);
         double rotY = x * Math.sin(botHeading) + y * Math.cos(botHeading);
 
@@ -87,13 +80,19 @@ public class TeleOp2 extends OpMode {
         frp = frp * (1 + 2*gamepad1.left_trigger);
         brp = brp * (1 + 2*gamepad1.left_trigger);
 
-
-
-        telemetry.update();
-
         fl.setPower(0.49*flp);
         bl.setPower(0.49*blp);
         fr.setPower(0.49*frp);
         br.setPower(0.49*brp);
+
+        armAssembly.execute();
+
+        if(gamepad1.right_trigger > 0.1){
+            intake.setPower(gamepad1.right_trigger/2);
+        }else{
+            intake.setPower(0);
+        }
+
+        telemetry.update();
     }
 }
