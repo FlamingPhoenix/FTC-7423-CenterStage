@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.toRadians;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -11,10 +10,13 @@ import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
@@ -31,6 +33,7 @@ public class TeleOp2 extends OpMode {
     ServoArm servoArm;
     armAssemblyTeleOp armAssembly;
     private AprilTagProcessor aprilTag;
+    private VisionPortal visionPortal;
     @Override
     public void init(){
         // DC MOTORS // DC MOTORS // DC MOTORS // DC MOTORS // DC MOTORS // DC MOTORS // DC MOTORS // DC MOTORS //
@@ -49,6 +52,8 @@ public class TeleOp2 extends OpMode {
         arml = hardwareMap.servo.get("arml");
 
         dm = hardwareMap.get(DistanceSensor.class,"dm");
+
+        initAprilTag();
 
         claw = new Claw(clawServo,0.9,0.8,1,0.6); //NOT FINAL - DO NOT RUN!!!!!!!!!!!!
         servoArm = new ServoArm(arml,armr,0.93,0.3); //NOT FINAL - DO NOT RUN!!!!!!!!!!
@@ -131,5 +136,13 @@ public class TeleOp2 extends OpMode {
         }
 
         telemetry.update();
+    }
+
+    private void initAprilTag(){
+        aprilTag = AprilTagProcessor.easyCreateWithDefaults();
+
+        // Create the vision portal the easy way.
+        visionPortal = VisionPortal.easyCreateWithDefaults(
+                hardwareMap.get(WebcamName.class, "Webcam 1"), aprilTag);
     }
 }

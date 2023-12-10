@@ -2,6 +2,10 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.hardware.Gamepad;
 
+import org.firstinspires.ftc.teamcode.Claw;
+import org.firstinspires.ftc.teamcode.Lift;
+import org.firstinspires.ftc.teamcode.ServoArm;
+import org.firstinspires.ftc.teamcode.clawPos;
 import org.jetbrains.annotations.NotNull;
 
 public class armAssemblyTeleOp {
