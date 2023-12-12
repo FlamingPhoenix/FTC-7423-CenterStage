@@ -1,14 +1,11 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.utility;
 
 import com.qualcomm.robotcore.hardware.Gamepad;
 
-import org.firstinspires.ftc.teamcode.Claw;
-import org.firstinspires.ftc.teamcode.Lift;
-import org.firstinspires.ftc.teamcode.ServoArm;
 import org.firstinspires.ftc.teamcode.clawPos;
 import org.jetbrains.annotations.NotNull;
 
-public class armAssemblyTeleOp {
+public class ArmAssemblyTeleOp {
     Claw claw;
     ServoArm servoArm;
     Lift lift;
@@ -18,7 +15,7 @@ public class armAssemblyTeleOp {
     double rightStickY;
     boolean returnToRest = false;//change from gamepad
     boolean extendToDrop = false;
-    public armAssemblyTeleOp(@NotNull Claw claw, @NotNull ServoArm servoArm, @NotNull Lift lift, Gamepad gamepad1, Gamepad gamepad2){
+    public ArmAssemblyTeleOp(@NotNull Claw claw, @NotNull ServoArm servoArm, @NotNull Lift lift, Gamepad gamepad1, Gamepad gamepad2){
         this.claw = claw;
         this.servoArm = servoArm;
         this.lift = lift;

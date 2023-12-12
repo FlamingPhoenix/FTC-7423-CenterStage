@@ -11,12 +11,15 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.teamcode.utility.ArmAssemblyTeleOp;
+import org.firstinspires.ftc.teamcode.utility.Claw;
+import org.firstinspires.ftc.teamcode.utility.Lift;
+import org.firstinspires.ftc.teamcode.utility.ServoArm;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
@@ -32,7 +35,7 @@ public class TeleOp2 extends OpMode {
     Claw claw;
     Lift lift;
     ServoArm servoArm;
-    armAssemblyTeleOp armAssembly;
+    ArmAssemblyTeleOp armAssembly;
     private AprilTagProcessor aprilTag;
     private VisionPortal visionPortal;
     double oldDistanceFromBackdrop = baseMaxDistance;
@@ -64,7 +67,7 @@ public class TeleOp2 extends OpMode {
         servoArm = new ServoArm(arml,armr,0.93,0.3); //NOT FINAL - DO NOT RUN!!!!!!!!!!
         lift = new Lift(liftr,liftl,gamepad2);
 
-        armAssembly = new armAssemblyTeleOp(claw, servoArm, lift, gamepad1, gamepad2);
+        armAssembly = new ArmAssemblyTeleOp(claw, servoArm, lift, gamepad1, gamepad2);
 
         fr.setDirection(DcMotorSimple.Direction.REVERSE);
         br.setDirection(DcMotorSimple.Direction.REVERSE);

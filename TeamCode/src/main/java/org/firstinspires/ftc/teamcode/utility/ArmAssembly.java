@@ -1,15 +1,16 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.utility;
 
+import org.firstinspires.ftc.teamcode.clawPos;
 import org.jetbrains.annotations.NotNull;
 
-public class armAssembly { //12-7: still in progress
+public class ArmAssembly { //12-7: still in progress
     Claw claw;
     ServoArm servoArm;
     Lift lift;
     boolean clawOpened = false;
     boolean armExtended = false;
     int currentClawPos = 0;
-    public armAssembly(@NotNull Claw claw, @NotNull ServoArm servoArm, @NotNull Lift lift){
+    public ArmAssembly(@NotNull Claw claw, @NotNull ServoArm servoArm, @NotNull Lift lift){
         this.claw = claw;
         this.servoArm = servoArm;
         this.lift = lift;
