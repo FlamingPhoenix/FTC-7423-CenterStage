@@ -7,8 +7,8 @@ public class ArmAssembly { //12-7: still in progress
     Claw claw;
     ServoArm servoArm;
     Lift lift;
-    boolean clawOpened = false;
-    boolean armExtended = false;
+    public boolean clawOpened = false;
+    public boolean armExtended = false;
     int currentClawPos = 0;
     public ArmAssembly(@NotNull Claw claw, @NotNull ServoArm servoArm, @NotNull Lift lift){
         this.claw = claw;
@@ -16,14 +16,18 @@ public class ArmAssembly { //12-7: still in progress
         this.lift = lift;
     }
     public void retract(){
+        servoArm.retract();
+        armExtended = false;
         setLiftPos(0);
         closeClaw();
+        clawOpened = false;
     }
     public void setLiftPos(double pos){
         lift.setLiftDualMotorPos(pos);
     }
     public void setCurrentClawPos(double pos){
         claw.setPos(pos);
+        currentClawPos = pos;
     }
     public void setArmPos(double pos){
         servoArm.setPosition(pos);
@@ -35,6 +39,7 @@ public class ArmAssembly { //12-7: still in progress
     }
     public void closeClaw(){
         claw.close();
+        clawOpened = false;
     }
     public void setArm(boolean extended){
         if(clawOpened){
