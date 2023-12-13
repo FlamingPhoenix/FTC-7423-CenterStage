@@ -121,4 +121,12 @@ public class Lift {
     public int getLiftPos(){
         return liftl.getCurrentPosition();
     }
+    public void retractDualMotor(){
+        while(liftl.getPosition < 10){
+            liftl.setPower(-0.5);
+            liftr.setPower(-0.5);
+        }
+        liftl.setPower(-0.06);
+        liftr.setPower(-0.06);
+    }
 }

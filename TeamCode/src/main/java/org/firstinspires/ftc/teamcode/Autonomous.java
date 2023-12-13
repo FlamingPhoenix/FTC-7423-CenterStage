@@ -35,7 +35,8 @@ public class Autonomous extends LinearOpMode {
     final double MAX_AUTO_STRAFE= 0.5;   //  Clip the approach speed to this max value (adjust for your robot)
     final double MAX_AUTO_TURN  = 0.3;   //  Clip the turn speed to this max value (adjust for your robot)
 
-    private DcMotor fl,fr,bl,br;
+    private DcMotor fl,fr,bl,br, liftm;
+    private Servo arml,armr,clawServo;
 
     boolean hastarget = false;
 
@@ -47,30 +48,77 @@ public class Autonomous extends LinearOpMode {
     final double DESIRED_DISTANCE = 3.0; //  this is how close the camera should get to the target (inches)
     private static final String TFOD_MODEL_ASSET = "/sdcard/FIRST/tflitemodels/model.tflite";
     private TfodProcessor tfod;
-    double[] xposs = {-40.96,-34.96,-28.96,-34.96};
+    double[] xpossB = {-40.96,-34.96,-28.96,-34.96};
+    double[] xpossR = {28.96,34.96,40.96,34.96};
     String[] poss = {"left","center","right","none"};
+
+    ServoArm arm;
+    Lift lift;
+    Claw claw;
     @Override
     public void runOpMode() throws InterruptedException {
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
+        claw = hardwareMap.servo.get("claw");
+        arml = hardwareMap.servo.get("arml");
+        armr = hardwareMap.servo.get("armr");
+        liftm = hardware.dcmotor.get("lift");
+        arm = new servoArm(arml,armr);
+        lift=  new Lift(liftm);
+        claw = new Claw(clawServo);
 
+        ArmAssembly armAssembly = new ArmAssembly()
         initTfod();
         //find team prop
         //set variable to 0 - left   1 - center   2 - right 3 - none
+        //parkposs - 12.8,60
         int teamProp = getPos();
         telemetry.addData("side",poss[teamProp]);
+        //RED BACKSTAGE CENTER PARK
         TrajectorySequence go2backdrop = drive.trajectorySequenceBuilder(new Pose2d(-63.00, 12.00, Math.toRadians(0.00)))
-                .splineTo(new Vector2d(xposs[teamProp], 49.01), Math.toRadians(90.00))
+                .splineTo(new Vector2d(xpossR[teamProp], 49.01), Math.toRadians(90.00))
                 .build();
-        TrajectorySequence loop = drive.trajectorySequenceBuilder(go2backdrop.end()).lineToConstantHeading(new Vector2d(-35.30, -4.75))
-                .lineToSplineHeading(new Pose2d(-36.05, -56.35, Math.toRadians(90.00)))
-                .splineToConstantHeading(new Vector2d(-13.51, -36.05), Math.toRadians(90.00))
-                .splineToConstantHeading(new Vector2d(-12.76, 12.95), Math.toRadians(91.43))
-                .splineToConstantHeading(new Vector2d(-36.05, 49.46), Math.toRadians(90.00))
+        TrajectorySequence park = drive.trajectorySequenceBuilder(go2backdrop.end())
+                .lineToConstantHeading(new Vector2d(12.8,49.01))
+                .lineToConstantHeading(new Vector2d(12.8,60))
                 .build();
+        // RED BACKSTAGE CORNER PARK
+        // TrajectorySequence go2backdrop = drive.trajectorySequenceBuilder(new Pose2d(-63.00, 12.00, Math.toRadians(0.00)))
+        //         .splineTo(new Vector2d(xpossR[teamProp], 49.01), Math.toRadians(90.00))
+        //         .build();
+        // TrajectorySequence park = drive.trajectorySequenceBuilder(go2backdrop.end())
+        //         .lineToConstantHeading(new Vector2d(60,49.01))
+        //         .lineToConstantHeading(new Vector2d(60,60))
+        //         .build();
+
+        // BLUE BACKSTAGE CORNER PARK
+        // TrajectorySequence go2backdrop = drive.trajectorySequenceBuilder(new Pose2d(63.00, 12.00, Math.toRadians(0.00)))
+        //         .splineTo(new Vector2d(-xpossB[teamProp], 49.01), Math.toRadians(90.00)) 
+        //         .build();
+        // TrajectorySequence park = drive.trajectorySequenceBuilder(go2backdrop.end())
+        //         .lineToConstantHeading(new Vector2d(-12.8,49.01))
+        //         .lineToConstantHeading(new Vector2d(-12.8,60))
+        //         .build();
+
+        // BLUE BACKSTAGE CENTER PARK
+        // TrajectorySequence go2backdrop = drive.trajectorySequenceBuilder(new Pose2d(63.00, 12.00, Math.toRadians(0.00)))
+        //         .splineTo(new Vector2d(-xpossB[teamProp], 49.01), Math.toRadians(90.00)) 
+        //         .build();
+        // TrajectorySequence park = drive.trajectorySequenceBuilder(go2backdrop.end())
+        //         .lineToConstantHeading(new Vector2d(-60,49.01))
+        //         .lineToConstantHeading(new Vector2d(-60,60))
+        //         .build();
+
+        // MAYBE NOT
+        // TrajectorySequence loop = drive.trajectorySequenceBuilder(go2backdrop.end()).lineToConstantHeading(new Vector2d(-35.30, -4.75))
+        //         .lineToSplineHeading(new Pose2d(-36.05, -56.35, Math.toRadians(90.00)))
+        //         .splineToConstantHeading(new Vector2d(-13.51, -36.05), Math.toRadians(90.00))
+        //         .splineToConstantHeading(new Vector2d(-12.76, 12.95), Math.toRadians(91.43))
+        //         .splineToConstantHeading(new Vector2d(-36.05, 49.46), Math.toRadians(90.00))
+        //         .build();
         fl  = hardwareMap.get(DcMotor.class, "fl");
         fr = hardwareMap.get(DcMotor.class, "fr");
         bl  = hardwareMap.get(DcMotor.class, "bl");
-        br = hardwareMap.get(DcMotor.class, "br");
+        br = hardwareMap.get(DcMotor.class, "br"); 
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // When run, this OpMode should start both motors driving forward. So adjust these two lines based on your first test drive.
@@ -85,8 +133,11 @@ public class Autonomous extends LinearOpMode {
         waitForStart();
         //start of autonomous
         drive.followTrajectorySequence(go2backdrop);
-
+        armAssembly.setArm(true);
+        armAssembly.setClaw(clawPoss.OPEN);
+        armAssembly.retract();
         while (opModeIsActive()) {
+
             telemetry.addData("side",poss[teamProp]);
             telemetry.update();
 

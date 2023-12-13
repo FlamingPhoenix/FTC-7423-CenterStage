@@ -15,6 +15,10 @@ public class ArmAssembly { //12-7: still in progress
         this.servoArm = servoArm;
         this.lift = lift;
     }
+    public void retract(){
+        setLiftPos(0);
+        closeClaw();
+    }
     public void setLiftPos(double pos){
         lift.setLiftDualMotorPos(pos);
     }
@@ -28,6 +32,9 @@ public class ArmAssembly { //12-7: still in progress
         claw.ezSetPos(posID);
         currentClawPos = posID.id;
         clawOpened = currentClawPos > 0;
+    }
+    public void closeClaw(){
+        claw.close();
     }
     public void setArm(boolean extended){
         if(clawOpened){
