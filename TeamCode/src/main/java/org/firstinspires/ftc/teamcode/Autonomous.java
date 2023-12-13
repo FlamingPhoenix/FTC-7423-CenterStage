@@ -35,7 +35,7 @@ public class Autonomous extends LinearOpMode {
     final double MAX_AUTO_STRAFE= 0.5;   //  Clip the approach speed to this max value (adjust for your robot)
     final double MAX_AUTO_TURN  = 0.3;   //  Clip the turn speed to this max value (adjust for your robot)
 
-    private DcMotor fl,fr,bl,br, liftm;
+    private DcMotor fl,fr,bl,br, liftr,liftl;
     private Servo arml,armr,clawServo;
 
     boolean hastarget = false;
@@ -61,12 +61,13 @@ public class Autonomous extends LinearOpMode {
         claw = hardwareMap.servo.get("claw");
         arml = hardwareMap.servo.get("arml");
         armr = hardwareMap.servo.get("armr");
-        liftm = hardware.dcmotor.get("lift");
+        liftl = hardwareMap.dcmotor.get("liftl");
+        liftr = hardwareMap.dcmotor.get("liftr");
         arm = new servoArm(arml,armr);
-        lift=  new Lift(liftm);
+        lift=  new Lift(liftl,liftr);
         claw = new Claw(clawServo);
 
-        ArmAssembly armAssembly = new ArmAssembly()
+        ArmAssembly armAssembly = new ArmAssembly(claw,arm,lift);
         initTfod();
         //find team prop
         //set variable to 0 - left   1 - center   2 - right 3 - none
@@ -319,9 +320,9 @@ public class Autonomous extends LinearOpMode {
 
     private int getPos(){
         int[] counts = new int[4];
-        for(int i = 0; i<10; i++){
+        for(int i = 0; i<20; i++){
             counts[getDetection()]++;  //get 10 detections & note the outputs
-            sleep(20);
+            sleep(10);
         }
         int max = 0;
         int maxIndex = 0;
