@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
@@ -26,6 +27,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
 import java.util.List;
 
+@TeleOp
 public class TeleOp2 extends OpMode {
     double baseMaxDistance = 40;
     DcMotor fl, fr, bl, br, intake, liftl, liftr;
@@ -39,7 +41,7 @@ public class TeleOp2 extends OpMode {
     private AprilTagProcessor aprilTag;
     private VisionPortal visionPortal;
     double oldDistanceFromBackdrop = baseMaxDistance;
-    ElapsedTime elapsedTime;
+    ElapsedTime elapsedTime = new ElapsedTime();;
     @Override
     public void init(){
         // DC MOTORS // DC MOTORS // DC MOTORS // DC MOTORS // DC MOTORS // DC MOTORS // DC MOTORS // DC MOTORS //
@@ -47,6 +49,7 @@ public class TeleOp2 extends OpMode {
         bl = hardwareMap.dcMotor.get("bl");
         fr = hardwareMap.dcMotor.get("fr");
         br = hardwareMap.dcMotor.get("br");
+        imu = hardwareMap.get(IMU.class,"imu");
 
         intake = hardwareMap.dcMotor.get("intake");
 
@@ -57,15 +60,15 @@ public class TeleOp2 extends OpMode {
         armr = hardwareMap.servo.get("armr");
         arml = hardwareMap.servo.get("arml");
 
-        dm = hardwareMap.get(DistanceSensor.class,"dm");
+//        dm = hardwareMap.get(DistanceSensor.class,"dm");
 
         initAprilTag();
 
         elapsedTime.reset();
 
-        claw = new Claw(clawServo,0.9,0.8,1,0.6); //NOT FINAL - DO NOT RUN!!!!!!!!!!!!
-        servoArm = new ServoArm(arml,armr,0.93,0.3); //NOT FINAL - DO NOT RUN!!!!!!!!!!
-        lift = new Lift(liftr,liftl,gamepad2);
+        claw = new Claw(clawServo,0.16,0.34,0.16,0.43); //NOT FINAL - DO NOT RUN!!!!!!!!!!!!
+        servoArm = new ServoArm(arml,armr,0.04,0.7); //NOT FINAL - DO NOT RUN!!!!!!!!!!
+        lift = new Lift(liftr,liftl,gamepad2,26,737);
 
         armAssembly = new ArmAssemblyTeleOp(claw, servoArm, lift, gamepad1, gamepad2);
 
@@ -79,7 +82,7 @@ public class TeleOp2 extends OpMode {
     @Override
     public void loop(){
         //Calculate motor powers for field centric drive
-        double y = -gamepad1.left_stick_y;// Remember, this is reversed!
+        double y = gamepad1.left_stick_y;// Remember, this is reversed!
         double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
         double rx = -gamepad1.right_stick_x;
         telemetry.addData("x",x);
@@ -107,31 +110,31 @@ public class TeleOp2 extends OpMode {
 
 
         //Prevent crashing into backdrop and possibly descoring pixels
-        double distanceFromBackdrop = dm.getDistance(DistanceUnit.INCH);
-        double backdropApproachSpeed = (Math.max(oldDistanceFromBackdrop - distanceFromBackdrop, 0))/(96*elapsedTime.seconds());
+        //double distanceFromBackdrop = dm.getDistance(DistanceUnit.INCH);
+        //double backdropApproachSpeed = (Math.max(oldDistanceFromBackdrop - distanceFromBackdrop, 0))/(96*elapsedTime.seconds());
         elapsedTime.reset(); //UNTESTED
 
-        double maxDistance = baseMaxDistance * Math.pow(backdropApproachSpeed, 2);
+//        double maxDistance = baseMaxDistance * Math.pow(backdropApproachSpeed, 2);
         double motorPowerMultiplier = 1;
 
-        telemetry.addData("maxDistance",maxDistance);
-        List<AprilTagDetection> currentDetections = aprilTag.getDetections();
-        for (AprilTagDetection detection : currentDetections) {
-            if(detection.metadata!=null){
-                telemetry.addData("aprilTag","detected");
-                telemetry.addData("id",detection.id);
-                if ((detection.ftcPose.y < maxDistance) && detection.id >= 1 && detection.id <= 6) {
-                    motorPowerMultiplier = Math.pow(backdropApproachSpeed, 2);
-                }
-            }
-        }
-
-        if(distanceFromBackdrop < maxDistance){
-            oldDistanceFromBackdrop = dm.getDistance(DistanceUnit.INCH);
-            motorPowerMultiplier = Math.pow(backdropApproachSpeed, 2);
-        }
-
-        oldDistanceFromBackdrop = Math.min(distanceFromBackdrop, baseMaxDistance);
+//        telemetry.addData("maxDistance",maxDistance);
+//        List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+//        for (AprilTagDetection detection : currentDetections) {
+//            if(detection.metadata!=null){
+//                telemetry.addData("aprilTag","detected");
+//                telemetry.addData("id",detection.id);
+//                if ((detection.ftcPose.y < maxDistance) && detection.id >= 1 && detection.id <= 6) {
+//                    motorPowerMultiplier = Math.pow(backdropApproachSpeed, 2);
+//                }
+//            }
+//        }
+//
+//        if(distanceFromBackdrop < maxDistance){
+//            oldDistanceFromBackdrop = dm.getDistance(DistanceUnit.INCH);
+//            motorPowerMultiplier = Math.pow(backdropApproachSpeed, 2);
+//        }
+//
+//        oldDistanceFromBackdrop = Math.min(distanceFromBackdrop, baseMaxDistance);
 
         //Actually set the power of the motors
         fl.setPower(0.49*flp*motorPowerMultiplier);
@@ -144,7 +147,7 @@ public class TeleOp2 extends OpMode {
 
         //Run intake
         if(gamepad1.right_trigger > 0.1){
-            intake.setPower(gamepad1.right_trigger/2);
+            intake.setPower(gamepad1.right_trigger/1.5);
         }else{
             intake.setPower(0);
         }

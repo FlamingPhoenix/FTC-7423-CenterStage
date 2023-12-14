@@ -9,15 +9,14 @@ public class Claw {
     private Servo claw;
 
     private double[] posValues;
-
+    /**
+     * @param claw claw servo
+     * @param openPos1 partially opened servo position(drop one pixel)
+     * @param openPos2 fully opened servo position(drop all pixels)
+     * @param closePos fully closed servo position(grab pixels)
+     * @param restPos servo position while claw in basket and awaits pixels from intake
+     */
     public Claw(@NotNull Servo claw, @NotNull double openPos1, @NotNull double openPos2, @NotNull double closePos, @NotNull double restPos){
-        /**
-         * @param claw claw servo
-         * @param openPos1 partially opened servo position(drop one pixel)
-         * @param openPos2 fully opened servo position(drop all pixels)
-         * @param closePos fully closed servo position(grab pixels)
-         * @param restPos servo position while claw in basket and awaits pixels from intake
-         */
         this.claw = claw;
         this.posValues = new double[]{closePos, openPos1, openPos2, restPos};
     }

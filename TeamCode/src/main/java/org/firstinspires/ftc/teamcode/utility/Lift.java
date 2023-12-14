@@ -11,7 +11,7 @@ public class Lift {
     DcMotor liftl,liftr;
     DcMotor[] liftMotors;
     Gamepad gamepad2;
-    private final double holdValue = 0.1;
+    private final double holdValue = 0.15;
 
     private double min = 0;
     private double max = 537;
@@ -51,6 +51,22 @@ public class Lift {
 
         this.min = min;
         this.max = max;
+        setLiftDualMotorPos(min);
+    }
+    public Lift(@NotNull DcMotor l, @NotNull DcMotor r, double min, double max){
+        liftposl = l.getCurrentPosition();
+        liftposr = r.getCurrentPosition();
+        liftl = l;
+        liftr = r;
+        liftl.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftr.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftl.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        liftr.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+
+        this.min = min;
+        this.max = max;
+        setLiftDualMotorPos(min);
     }
     public Lift(DcMotor[] motors, Gamepad gp2){//WIP
         liftMotors = motors;
@@ -110,19 +126,26 @@ public class Lift {
          * set the lift to a certain encoder position
         @param pos encoder value
         */
-
         liftposl = liftl.getCurrentPosition();
         liftposr = liftr.getCurrentPosition();
-        while(liftposl < pos){
-            liftl.setPower(0.5);
-            liftr.setPower(0.5);
+        encoderDifference = liftposl - liftposr;
+        double liftlPower,liftrPower = 0;
+        if(pos > liftposl) {//up
+            liftlPower = 0.28;
+        }else if(pos < liftposl) {//down
+            liftlPower = -0.1;
+        }else{
+            liftlPower = holdValue;
         }
+        liftl.setPower(liftlPower);
+        liftr.setPower(liftrPower + encoderDifference/1000);
+
     }
     public int getLiftPos(){
         return liftl.getCurrentPosition();
     }
     public void retractDualMotor(){
-        while(liftl.getPosition < 10){
+        while(liftl.getCurrentPosition() < 10){
             liftl.setPower(-0.5);
             liftr.setPower(-0.5);
         }

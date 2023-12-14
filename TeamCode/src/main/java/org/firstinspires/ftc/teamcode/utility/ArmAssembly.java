@@ -26,8 +26,9 @@ public class ArmAssembly { //12-7: still in progress
         lift.setLiftDualMotorPos(pos);
     }
     public void setCurrentClawPos(double pos){
+        /**
+         * */
         claw.setPos(pos);
-        currentClawPos = pos;
     }
     public void setArmPos(double pos){
         servoArm.setPosition(pos);

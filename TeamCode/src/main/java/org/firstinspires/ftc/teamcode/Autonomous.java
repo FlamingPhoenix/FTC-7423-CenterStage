@@ -7,6 +7,8 @@ import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
@@ -17,6 +19,10 @@ import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 import org.firstinspires.ftc.teamcode.trajectorysequence.sequencesegment.TrajectorySegment;
+import org.firstinspires.ftc.teamcode.utility.ArmAssembly;
+import org.firstinspires.ftc.teamcode.utility.Claw;
+import org.firstinspires.ftc.teamcode.utility.Lift;
+import org.firstinspires.ftc.teamcode.utility.ServoArm;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
@@ -58,14 +64,14 @@ public class Autonomous extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
-        claw = hardwareMap.servo.get("claw");
+        clawServo = hardwareMap.servo.get("claw");
         arml = hardwareMap.servo.get("arml");
         armr = hardwareMap.servo.get("armr");
-        liftl = hardwareMap.dcmotor.get("liftl");
-        liftr = hardwareMap.dcmotor.get("liftr");
-        arm = new servoArm(arml,armr);
-        lift=  new Lift(liftl,liftr);
-        claw = new Claw(clawServo);
+        liftl = hardwareMap.dcMotor.get("liftl");
+        liftr = hardwareMap.dcMotor.get("liftr");
+        arm = new ServoArm(arml,armr,0.02,0.7);//PLACEHOLDER VALUES
+        lift=  new Lift(liftl,liftr,26,576);
+        claw = new Claw(clawServo,0.16,0.35,0.16,0.43);
 
         ArmAssembly armAssembly = new ArmAssembly(claw,arm,lift);
         initTfod();
@@ -128,15 +134,16 @@ public class Autonomous extends LinearOpMode {
         bl.setDirection(DcMotor.Direction.REVERSE);
         fr.setDirection(DcMotor.Direction.FORWARD);
         br.setDirection(DcMotor.Direction.FORWARD);
-
-        setManualExposure(6,250);
-        initAprilTag();
+        claw.close();
+        //initAprilTag();
         waitForStart();
+        telemetry.addData("statis","opmode started");
         //start of autonomous
         drive.followTrajectorySequence(go2backdrop);
         armAssembly.setArm(true);
-        armAssembly.setClaw(clawPoss.OPEN);
+        armAssembly.setClaw(clawPos.OPEN1);
         armAssembly.retract();
+        drive.followTrajectorySequence(park);
         while (opModeIsActive()) {
 
             telemetry.addData("side",poss[teamProp]);

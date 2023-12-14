@@ -40,7 +40,7 @@ public class ArmAssemblyTeleOp {
         if(gamepad2.a){//CLAW HALF OPEN
             claw.ezSetPos(clawPos.OPEN1);
         }
-        if(gamepad1.b){//CLAW FULL OPEN
+        if(gamepad2.b){//CLAW FULL OPEN
             claw.ezSetPos(clawPos.OPEN2);
         }
         if(gamepad2.x){//CLAW FULL CLOSED
