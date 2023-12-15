@@ -54,7 +54,14 @@ public class TeleOp2 extends OpMode {
         intake = hardwareMap.dcMotor.get("intake");
 
         liftr = hardwareMap.dcMotor.get("liftr");
+        liftr.setDirection(DcMotor.Direction.REVERSE);
         liftl = hardwareMap.dcMotor.get("liftl");
+        liftl.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        liftr.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        liftr.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftl.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftr.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        liftl.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         // SERVOS // SERVOS // SERVOS // SERVOS // SERVOS // SERVOS // SERVOS // SERVOS // SERVOS // SERVOS //
         clawServo = hardwareMap.servo.get("claw");
         armr = hardwareMap.servo.get("armr");
