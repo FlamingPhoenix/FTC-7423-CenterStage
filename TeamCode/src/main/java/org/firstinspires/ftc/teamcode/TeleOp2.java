@@ -73,9 +73,9 @@ public class TeleOp2 extends OpMode {
 
         elapsedTime.reset();
 
-        claw = new Claw(clawServo,0.16,0.34,0.16,0.43); //NOT FINAL - DO NOT RUN!!!!!!!!!!!!
+        claw = new Claw(clawServo,0.25,0.34,0.16,0.43); //NOT FINAL - DO NOT RUN!!!!!!!!!!!!
         servoArm = new ServoArm(arml,armr,0.04,0.7); //NOT FINAL - DO NOT RUN!!!!!!!!!!
-        lift = new Lift(liftr,liftl,gamepad2,26,737);
+        lift = new Lift(liftr,liftl,gamepad2,5,737);
 
         armAssembly = new ArmAssemblyTeleOp(claw, servoArm, lift, gamepad1, gamepad2);
 
@@ -150,6 +150,9 @@ public class TeleOp2 extends OpMode {
         br.setPower(0.49*brp*motorPowerMultiplier);
 
         //Run armAssembly
+        telemetry.addData("clawPos:", claw.getPos());
+        telemetry.addData("liftPos:", lift.getLiftPos());
+        telemetry.addData("closePos:", claw.posValues[clawPos.CLOSE.id]);
         armAssembly.execute();
 
         //Run intake

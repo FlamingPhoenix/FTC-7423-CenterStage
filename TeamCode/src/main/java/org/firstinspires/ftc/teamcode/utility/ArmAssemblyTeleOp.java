@@ -5,6 +5,8 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 import org.firstinspires.ftc.teamcode.clawPos;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.concurrent.TimeUnit;
+
 public class ArmAssemblyTeleOp {
     Claw claw;
     ServoArm servoArm;
@@ -47,7 +49,7 @@ public class ArmAssemblyTeleOp {
             claw.close();
         }
 
-        rightStickY = gamepad2.right_stick_y;
+        rightStickY = -gamepad2.right_stick_y;
 
         if(Math.abs(rightStickY) >= 0.01){ //If driver is giving an input, they probably want to override the lift power
             extendToDrop = false;
@@ -55,15 +57,15 @@ public class ArmAssemblyTeleOp {
         }
 
         if(returnToRest) {
-            rightStickY = -0.111111;//CHANGE --~-0.5 // FOR TESTING, DON'T BREAK CLAW
+            rightStickY = -0.5;//CHANGE --~-0.5 // FOR TESTING, DON'T BREAK CLAW
 
-            if(lift.getLiftPos()<5){//LIFT IS AT LOWEST
+            if(lift.getLiftPos()<30){//LIFT IS AT LOWEST
                 claw.ezSetPos(clawPos.REST);
-                returnToRest = false;
+                //returnToRest = false;
             }
         }
         if(extendToDrop) {
-            rightStickY = 0.25;//set to low speed for testing
+            rightStickY = 0.6;//set to low speed for testing
         }
 
         lift.setLiftDualMotor(rightStickY);

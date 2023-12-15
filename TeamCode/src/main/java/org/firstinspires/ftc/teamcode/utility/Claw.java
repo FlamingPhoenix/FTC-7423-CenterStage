@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 public class Claw {
     private Servo claw;
 
-    private double[] posValues;
+    public double[] posValues;
     /**
      * @param claw claw servo
      * @param openPos1 partially opened servo position(drop one pixel)
