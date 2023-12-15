@@ -9,7 +9,7 @@ public class DistanceSensorPropDetection {
     static double NO_DETECTION_THRESHOLD = 30; //In Inches
     int unusedSensor = 0; //The sensor which is blocked by the central truss and is unused
     DistanceSensor dl, dm, dr;
-    DistanceSensorPropDetection(@NotNull DistanceSensor dl_, @NotNull DistanceSensor dm_, @NotNull DistanceSensor dr_, int unusedSensor_){
+    public DistanceSensorPropDetection(@NotNull DistanceSensor dl_, @NotNull DistanceSensor dm_, @NotNull DistanceSensor dr_, int unusedSensor_){
         dl = dl_;
         dm = dm_;
         dr = dr_;
@@ -17,7 +17,7 @@ public class DistanceSensorPropDetection {
     }
 
     //Returns either 0, 1, or 2. 0 = Left, 1 = Middle, 2 = Right
-    int getPropPos(){
+    public int getPropPos(){
         double currLeastDistance = 10000;
         int currLeastDistancePos = unusedSensor;
 
