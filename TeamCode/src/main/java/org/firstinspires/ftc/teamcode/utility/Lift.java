@@ -104,7 +104,7 @@ public class Lift {
         if(rightStickY>0.1){//up
             liftlPower = rightStickY;
         }else if(rightStickY<-0.1) {//down
-            liftlPower = rightStickY/3;
+            liftlPower = rightStickY/2.5;
         }else{
             liftlPower = holdValue;
         }

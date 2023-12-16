@@ -23,7 +23,7 @@ public class Claw {
     public void ezSetPos(clawPos pos){
         claw.setPosition(posValues[pos.id]);
     }
-//    public void ezSetPos(clawPoss pos){
+    //    public void ezSetPos(clawPoss pos){
 //        claw.setPosition(pos);
 //    }
     public void open(){

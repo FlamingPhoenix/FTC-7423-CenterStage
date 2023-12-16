@@ -73,9 +73,9 @@ public class TeleOp2 extends OpMode {
 
         elapsedTime.reset();
 
-        claw = new Claw(clawServo,0.25,0.34,0.16,0.43); //NOT FINAL - DO NOT RUN!!!!!!!!!!!!
+        claw = new Claw(clawServo,0.265,0.34,0.16,0.8); //NOT FINAL - DO NOT RUN!!!!!!!!!!!!
         servoArm = new ServoArm(arml,armr,0.04,0.7); //NOT FINAL - DO NOT RUN!!!!!!!!!!
-        lift = new Lift(liftr,liftl,gamepad2,5,737);
+        lift = new Lift(liftr,liftl,gamepad2,-50,737);
 
         armAssembly = new ArmAssemblyTeleOp(claw, servoArm, lift, gamepad1, gamepad2);
 
@@ -90,7 +90,7 @@ public class TeleOp2 extends OpMode {
     public void loop(){
         //Calculate motor powers for field centric drive
         double y = gamepad1.left_stick_y;// Remember, this is reversed!
-        double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
+        double x = -gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
         double rx = -gamepad1.right_stick_x;
         telemetry.addData("x",x);
         telemetry.addData("y",y);

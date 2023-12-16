@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
-import static java.lang.Math.abs;
+import  static java.lang.Math.abs;
 
 import android.hardware.Sensor;
 
@@ -91,18 +91,8 @@ public class FieldCentricDrive extends LinearOpMode {
             else{
                 motorPowerMultiplier = 1;
             }*/
-            if (gamepad2.left_stick_y>0){
-                liftl.setPower(0.5*-gamepad2.left_stick_y);
-                liftr.setPower(0.5*gamepad2.left_stick_y);
-            }
-            else{
-                liftl.setPower(-gamepad2.left_stick_y);
-                liftr.setPower(gamepad2.left_stick_y);
-            }
-
-
-            liftl.setPower(0.15f);
-            liftr.setPower(-0.15f);
+            liftl.setPower(-gamepad2.left_stick_y);
+            liftr.setPower(gamepad2.left_stick_y);
 
             double y = -gamepad1.left_stick_y;// Remember, this is reversed!
             double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
